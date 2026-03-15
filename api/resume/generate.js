@@ -48,16 +48,26 @@ export default async function handler(req, res) {
     let prompt;
 
     if (mode === 'generic' && translateTo) {
-      // TRANSLATION MODE: explicitly translate resume content to another language
       console.log('TRANSLATION MODE: translating to', translateTo);
-      const targetLangName = translateTo === 'fr' ? 'FRENCH (Canadian French / québécois)' : 'ENGLISH';
-      const rawText = personalInfo?.rawResume || JSON.stringify(personalInfo);
-      prompt = `TRANSLATE this resume to ${targetLangName}. Keep names, companies, cities, dates unchanged. Translate everything else.
+      const rawText = (personalInfo?.rawResume || JSON.stringify(personalInfo)).substring(0, 2500);
+      
+      if (translateTo === 'fr') {
+        prompt = `Traduisez ce CV en français canadien. Gardez les noms propres (noms de personnes, entreprises, villes, écoles) inchangés. Traduisez tout le reste: résumé, titres de postes, descriptions, compétences.
 
-${rawText.substring(0, 2500)}
+CV À TRADUIRE:
+${rawText}
+
+Retournez le CV traduit en format JSON (pas de markdown):
+{"fullName":"garder original","email":"garder","phone":"garder","location":"garder","linkedinUrl":"garder","summary":"LE RÉSUMÉ TRADUIT EN FRANÇAIS ICI","experience":[{"title":"TITRE DU POSTE EN FRANÇAIS","company":"garder nom original","location":"garder","startDate":"garder","endDate":"garder ou Présent","bullets":["CHAQUE POINT TRADUIT EN FRANÇAIS"]}],"education":[{"degree":"NOM DU DIPLÔME EN FRANÇAIS","school":"garder nom original","year":"garder","details":""}],"skills":["COMPÉTENCE EN FRANÇAIS"],"certifications":[],"languages":[],"tips":[]}`;
+      } else {
+        prompt = `Translate this resume into English. Keep proper nouns (person names, company names, cities, schools) unchanged. Translate everything else.
+
+RESUME TO TRANSLATE:
+${rawText}
 
 Return as JSON (no markdown):
-{"fullName":"keep original","email":"keep","phone":"keep","location":"keep","linkedinUrl":"keep","summary":"TRANSLATED summary","experience":[{"title":"TRANSLATED title","company":"keep","location":"keep","startDate":"keep","endDate":"keep","bullets":["TRANSLATED bullet"]}],"education":[{"degree":"TRANSLATED","school":"keep","year":"keep","details":""}],"skills":["TRANSLATED"],"certifications":[],"languages":[],"tips":[]}`;
+{"fullName":"keep original","email":"keep","phone":"keep","location":"keep","linkedinUrl":"keep","summary":"TRANSLATED SUMMARY IN ENGLISH","experience":[{"title":"JOB TITLE IN ENGLISH","company":"keep original","location":"keep","startDate":"keep","endDate":"keep or Present","bullets":["EACH BULLET TRANSLATED TO ENGLISH"]}],"education":[{"degree":"DEGREE NAME IN ENGLISH","school":"keep original","year":"keep","details":""}],"skills":["SKILL IN ENGLISH"],"certifications":[],"languages":[],"tips":[]}`;
+      }
     } else if (mode === 'generic') {
       // FREE TIER: Generic resume, no job description needed
       const langTop = language === 'fr' 
@@ -209,8 +219,11 @@ Follow resume standards for ${targetCountry || 'Canada'}. Use relevant keywords 
 
     // Add system prompt for translation to force language output
     if (translateTo) {
-      const sysLang = translateTo === 'fr' ? 'French (Canadian French)' : 'English';
-      apiBody.system = `You are a resume translator. You MUST output ALL text content in ${sysLang}. Every single field value in your JSON response — summary, job titles, bullet points, skills, education — must be written in ${sysLang}. This is non-negotiable. If the input is in English and the target is French, you translate everything to French. Never return content in the original language.`;
+      if (translateTo === 'fr') {
+        apiBody.system = `Tu es un traducteur professionnel de CV. Tu DOIS écrire TOUT le contenu en français canadien. Chaque valeur dans le JSON — résumé, titres de postes, points, compétences, formation — doit être en français. Ne retourne JAMAIS du contenu en anglais.`;
+      } else {
+        apiBody.system = `You are a professional resume translator. You MUST write ALL content in English. Every value in the JSON must be in English. Never return French content.`;
+      }
     }
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
