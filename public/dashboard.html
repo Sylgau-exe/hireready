@@ -938,7 +938,7 @@ function setLang(lang) {
 }
 
 function applyPageTranslations() {
-  const L = currentLang;
+  const fr = currentLang === 'fr';
   
   // ---- HOME ----
   const greet = document.getElementById('greetName');
@@ -948,20 +948,14 @@ function applyPageTranslations() {
   }
   const homeSub = document.querySelector('#page-home .page-header p');
   if (homeSub) homeSub.textContent = t('home.subtitle');
-
-  // Step flow
   const steps = document.querySelectorAll('#page-home .step-label');
   if (steps.length >= 3) {
     steps[0].innerHTML = `${t('home.step1')} <span style="color:var(--success);font-weight:600;">${t('tier.free').toUpperCase()}</span>`;
     steps[1].innerHTML = `${t('home.step2')} <span style="color:var(--accent);font-weight:600;">PRO</span>`;
     steps[2].innerHTML = `${t('home.step3')} <span style="color:#c084fc;font-weight:600;">PREMIUM</span>`;
   }
-
-  // Stats
   const statLabels = document.querySelectorAll('#page-home .stat-label');
   if (statLabels.length >= 3) { statLabels[0].textContent=t('home.resumes'); statLabels[1].textContent=t('home.analyses'); statLabels[2].textContent=t('home.interviews'); }
-
-  // Journey card
   const journeyH = document.querySelector('#page-home .card h3');
   if (journeyH) journeyH.innerHTML = `🚀 ${t('home.journey')}`;
   const journeyP = document.querySelector('#page-home .card p');
@@ -974,17 +968,104 @@ function applyPageTranslations() {
   if (rTitle) rTitle.textContent = t('resume.title');
   const rSub = document.querySelector('#page-resume .page-header p');
   if (rSub) rSub.innerHTML = `${t('resume.subtitle')} <span style="color:var(--success);font-weight:600;">${t('tier.free').toUpperCase()}</span>`;
-
-  // Tab buttons
-  const rTabs = document.querySelectorAll('#page-resume .input-method button');
+  const rTabs = document.querySelectorAll('#page-resume > .input-method button');
   if (rTabs.length >= 3) { rTabs[0].textContent=t('resume.tab.create'); rTabs[1].textContent=t('resume.tab.paste'); rTabs[2].textContent=t('resume.tab.upload'); }
+
+  // Resume form labels (Create from Scratch)
+  const formLabels = {
+    'rName': fr?'Nom Complet':'Full Name', 'rEmail': fr?'Courriel':'Email',
+    'rPhone': fr?'Téléphone':'Phone', 'rLocation': fr?'Ville':'Location',
+    'rLinkedin': fr?'URL LinkedIn (optionnel)':'LinkedIn URL (optional)',
+    'rCountry': fr?'Pays Cible':'Target Country',
+    'rExperience': fr?'Décrivez vos postes précédents, réalisations et responsabilités :':'Describe your previous roles, achievements, and responsibilities:',
+    'rEducation': fr?'Formation':'Education',
+    'rSkills': fr?'Compétences (séparées par des virgules)':'Skills (comma-separated)',
+    'rUploadCountry': fr?'Pays Cible':'Target Country',
+    'rUploadText': null,
+    // Parsed preview
+    'pName': fr?'Nom Complet':'Full Name', 'pEmail': fr?'Courriel':'Email',
+    'pPhone': fr?'Téléphone':'Phone', 'pLocation': fr?'Ville':'Location',
+    'pLinkedin': fr?'URL LinkedIn':'LinkedIn URL',
+    'pSummary': fr?'Résumé Professionnel':'Professional Summary',
+    'pExperience': null, 'pEducation': fr?'Formation':'Education',
+    'pSkills': fr?'Compétences':'Skills', 'pLanguages': fr?'Langues':'Languages',
+    'pCountry': fr?'Pays Cible':'Target Country',
+    // Tailor page
+    'jobDesc': null, 'jobUrl': null, 'jobDescFromUrl': null,
+    'tailorCountry': fr?'Pays Cible':'Target Country',
+    'tailorCompany': fr?'Nom de l\'Entreprise (pour la lettre)':'Company Name (for cover letter)',
+    'tailorResume': null,
+    // Interview
+    'intJobTitle': fr?'Titre du Poste':'Job Title', 'intCompany': fr?'Entreprise':'Company',
+    'intJobDesc': fr?'Description du Poste':'Job Description',
+    'intCount': fr?'Nombre de Questions':'Number of Questions',
+    'intCountry': fr?'Pays Cible':'Target Country',
+  };
+  Object.entries(formLabels).forEach(([id, label]) => {
+    if (!label) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const labelEl = el.closest('.form-group')?.querySelector('label');
+    if (labelEl) labelEl.textContent = label;
+  });
+
+  // Card titles
+  const cardTitles = [
+    ['#resume-create .card:nth-child(1) h3', fr?'👤 Vos Informations':'👤 Your Information'],
+    ['#resume-create .card:nth-child(2) h3', fr?'💼 Expérience Professionnelle':'💼 Work Experience'],
+    ['#resume-create .card:nth-child(3) h3', fr?'🎓 Formation et Compétences':'🎓 Education & Skills'],
+    ['#resume-upload .card h3', fr?'📋 Collez Votre CV Existant':'📋 Paste Your Existing Resume'],
+    ['#resume-file .card > h3', fr?'📎 Téléversez Votre CV':'📎 Upload Your Resume File'],
+  ];
+  cardTitles.forEach(([sel, text]) => {
+    const el = document.querySelector(sel);
+    if (el) el.textContent = text;
+  });
+
+  // Resume build buttons
+  const buildBtn = document.querySelector('#resume-create > .btn-primary');
+  if (buildBtn) buildBtn.textContent = t('resume.buildBtn');
+  const polishBtn = document.querySelector('#resume-upload .btn-primary');
+  if (polishBtn) polishBtn.textContent = t('resume.polishBtn');
+
+  // Upload zone text
+  const uzP = document.querySelector('#resume-file .upload-zone p');
+  if (uzP) uzP.innerHTML = fr?'<strong>Cliquez pour téléverser</strong> ou glissez-déposez votre CV':'<strong>Click to upload</strong> or drag & drop your resume';
+  const uzF = document.querySelector('#resume-file .upload-zone .formats');
+  if (uzF) uzF.textContent = fr?'Formats : PDF, DOCX, DOC, TXT':'Supports: PDF, DOCX, DOC, TXT';
+  const uzDesc = document.querySelector('#resume-file .card > p');
+  if (uzDesc) uzDesc.textContent = fr?'Téléversez votre PDF ou document Word. Nous extrairons le contenu et créerons un CV structuré.':'Upload your PDF or Word document. We\'ll extract the content, figure out what goes where, and build a polished resume.';
+
+  // Upload paste desc
+  const pasteDesc = document.querySelector('#resume-upload .card > p');
+  if (pasteDesc) pasteDesc.textContent = fr?'Collez le texte de votre CV ci-dessous. Nous le structurerons.':'Paste the text of your resume below. We\'ll structure and polish it.';
+
+  // Parsed preview
+  const parsedSuccess = document.querySelector('#parsedPreview .card h3');
+  if (parsedSuccess) parsedSuccess.textContent = t('resume.parsed.success');
+  const parsedReview = document.querySelector('#parsedPreview .card p');
+  if (parsedReview) parsedReview.textContent = t('resume.parsed.review');
+  const parsedBtns = document.querySelectorAll('#parsedPreview .btn-primary');
+  parsedBtns.forEach(b => b.textContent = t('resume.buildBtn'));
+  const parsedEdit = document.querySelector('#parsedPreview .btn-outline');
+  if (parsedEdit) parsedEdit.textContent = t('resume.parsed.editFull');
+
+  // Resume result
+  const resResult = document.querySelector('#resumeResult .card:first-child h3');
+  if (resResult) resResult.textContent = t('resume.result');
+  const nextH = document.querySelector('#resumeResult .card:last-child h3');
+  if (nextH) nextH.textContent = t('resume.nextStep');
+  const nextP = document.querySelector('#resumeResult .card:last-child p');
+  if (nextP) nextP.textContent = t('resume.nextStepDesc');
+  const nextBtn = document.querySelector('#resumeResult .card:last-child .btn-primary');
+  if (nextBtn) nextBtn.textContent = t('resume.nextStepBtn');
 
   // ---- DOCS PAGE ----
   const dTitle = document.querySelector('#page-docs .page-header h1');
   if (dTitle) dTitle.textContent = t('docs.title');
   const dSub = document.querySelector('#page-docs .page-header p');
   if (dSub) dSub.textContent = t('docs.subtitle');
-  const dTabs = document.querySelectorAll('#page-docs .input-method button');
+  const dTabs = document.querySelectorAll('#page-docs > .input-method button');
   if (dTabs.length >= 4) { dTabs[0].textContent=t('docs.all'); dTabs[1].textContent=t('docs.resumes'); dTabs[2].textContent=t('docs.tailored'); dTabs[3].textContent=t('docs.covers'); }
 
   // ---- TAILOR PAGE ----
@@ -992,12 +1073,36 @@ function applyPageTranslations() {
   if (tTitle) tTitle.textContent = t('tailor.title');
   const tSub = document.querySelector('#page-tailor .page-header p');
   if (tSub) tSub.innerHTML = `${t('tailor.subtitle')} <span style="color:var(--accent);font-weight:600;">PRO</span>`;
+  // Tailor card titles
+  const tJobH = document.querySelector('#proContent > .card:first-child h3');
+  if (tJobH) tJobH.textContent = t('tailor.jobPosting');
+  const tJobTabs = document.querySelectorAll('#proContent > .card:first-child .input-method button');
+  if (tJobTabs.length >= 2) { tJobTabs[0].textContent=t('tailor.pasteDesc'); tJobTabs[1].textContent=t('tailor.pasteUrl'); }
+  const tResH = document.querySelectorAll('#proContent > .card')[1]?.querySelector('h3');
+  if (tResH) tResH.textContent = t('tailor.yourResume');
+  const tResTabs = document.querySelectorAll('#proContent > .card')[1]?.querySelectorAll('.input-method button');
+  if (tResTabs?.length >= 2) { tResTabs[0].textContent=t('tailor.pickSaved'); tResTabs[1].textContent=t('tailor.pasteText'); }
+  const tGoBtn = document.querySelectorAll('#proContent > .card')[1]?.querySelector('.btn-primary');
+  if (tGoBtn) tGoBtn.textContent = t('tailor.goBtn');
+  // Results
+  const compH = document.querySelector('#tailorResults .card:first-child h3');
+  if (compH) compH.textContent = t('tailor.comparison');
 
   // ---- INTERVIEW PAGE ----
   const iTitle = document.querySelector('#page-interview .page-header h1');
   if (iTitle) iTitle.textContent = t('int.title');
   const iSub = document.querySelector('#page-interview .page-header p');
   if (iSub) iSub.innerHTML = `${t('int.subtitle')} <span style="color:#c084fc;font-weight:600;">PREMIUM</span>`;
+  const iChooseH = document.querySelector('#interviewSetup .card:first-child h3');
+  if (iChooseH) iChooseH.textContent = t('int.chooseJob');
+  const iChooseP = document.querySelector('#interviewSetup .card:first-child > p');
+  if (iChooseP) iChooseP.textContent = t('int.chooseJobDesc');
+  const iDetH = document.querySelector('#interviewManualCard h3');
+  if (iDetH) iDetH.textContent = t('int.details');
+  const iDetP = document.querySelector('#interviewManualCard > p');
+  if (iDetP) iDetP.textContent = t('int.detailsDesc');
+  const iStartBtn = document.querySelector('#interviewManualCard .btn-primary');
+  if (iStartBtn) iStartBtn.textContent = t('int.startBtn');
 }
 
 // Get language string for AI prompts
