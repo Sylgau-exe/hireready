@@ -367,9 +367,18 @@ textarea{min-height:120px;}
 
         <!-- Parsed Result Preview -->
         <div id="parsedPreview" class="hidden">
+          <!-- BIG CTA at top -->
+          <div class="card" style="text-align:center;background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.25);margin-top:1.5rem;">
+            <h3 style="justify-content:center;font-family:'Fraunces',serif;font-size:1.3rem;">✅ Resume Parsed Successfully!</h3>
+            <p style="color:var(--text2);margin-bottom:1rem;">Review the extracted info below, then click to build your polished resume.</p>
+            <button class="btn btn-primary" onclick="generateFromParsed()" style="font-size:1rem;padding:0.8rem 2.5rem;">✨ Build My Resume — Free</button>
+          </div>
+
           <div class="parsed-preview">
-            <h3 style="margin-bottom:1rem;">📋 Extracted Information</h3>
-            <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem;">Review what we found. You can edit any field before generating your resume.</p>
+            <h3 style="margin-bottom:0.5rem;">📋 Extracted Information</h3>
+            <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem;">You can edit any field before generating.</p>
+            
+            <div style="border-bottom:1px solid var(--border);padding-bottom:0.5rem;margin-bottom:1rem;color:var(--accent);font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">👤 Personal Info</div>
             <div class="form-row">
               <div class="form-group"><label>Full Name</label><input type="text" id="pName"></div>
               <div class="form-group"><label>Email</label><input type="email" id="pEmail"></div>
@@ -380,7 +389,14 @@ textarea{min-height:120px;}
             </div>
             <div class="form-group"><label>LinkedIn URL</label><input type="text" id="pLinkedin"></div>
             <div class="form-group"><label>Professional Summary</label><textarea id="pSummary" style="min-height:80px;"></textarea></div>
-            <div class="form-group"><label>Work Experience</label><textarea id="pExperience" style="min-height:180px;"></textarea></div>
+            
+            <div style="border-bottom:1px solid var(--border);padding-bottom:0.5rem;margin:1.5rem 0 1rem;color:var(--accent);font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">💼 Work Experience</div>
+            <div class="form-group">
+              <textarea id="pExperience" style="min-height:250px;white-space:pre-wrap;line-height:1.6;"></textarea>
+              <p style="font-size:0.75rem;color:var(--text2);margin-top:0.35rem;">Each role should be separated by a blank line. You can edit to clean up.</p>
+            </div>
+
+            <div style="border-bottom:1px solid var(--border);padding-bottom:0.5rem;margin:1.5rem 0 1rem;color:var(--accent);font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">🎓 Education & Skills</div>
             <div class="form-group"><label>Education</label><textarea id="pEducation" style="min-height:80px;"></textarea></div>
             <div class="form-group"><label>Skills</label><input type="text" id="pSkills"></div>
             <div class="form-group"><label>Languages</label><input type="text" id="pLanguages"></div>
@@ -393,8 +409,8 @@ textarea{min-height:120px;}
             </div>
           </div>
           <div style="margin-top:1.5rem;display:flex;gap:1rem;">
-            <button class="btn btn-primary" onclick="generateFromParsed()">✨ Build My Resume — Free</button>
-            <button class="btn btn-outline" onclick="fillCreateForm()">✏️ Edit in Full Form</button>
+            <button class="btn btn-primary" onclick="generateFromParsed()" style="flex:2;">✨ Build My Resume — Free</button>
+            <button class="btn btn-outline" onclick="fillCreateForm()" style="flex:1;">✏️ Edit in Full Form</button>
           </div>
         </div>
       </div>
@@ -487,13 +503,29 @@ textarea{min-height:120px;}
 
       <!-- RESULTS -->
       <div id="tailorResults" class="hidden">
-        <!-- ATS Score -->
+        <!-- ATS Score Before/After -->
         <div class="card">
-          <div class="ats-gauge">
-            <div class="gauge-circle" id="gaugeCircle"><span class="gauge-score" id="gaugeScore">0%</span></div>
-            <div class="gauge-label">ATS Compatibility Score</div>
-            <p id="atsSummary" style="color:var(--text2);margin-top:0.75rem;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.6;"></p>
+          <h3 style="justify-content:center;text-align:center;">📊 ATS Score Comparison</h3>
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:1.5rem;align-items:center;padding:1.5rem 0;">
+            <!-- BEFORE -->
+            <div class="ats-gauge" style="padding:1rem;">
+              <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--danger);margin-bottom:0.75rem;">Before</div>
+              <div class="gauge-circle" id="gaugeBefore" style="width:130px;height:130px;"><span class="gauge-score" id="scoreBefore" style="font-size:2.2rem;">0%</span></div>
+              <div class="gauge-label" style="margin-top:0.5rem;">Original Resume</div>
+            </div>
+            <!-- ARROW -->
+            <div style="text-align:center;">
+              <div style="font-size:2rem;">→</div>
+              <div id="scoreImprovement" style="font-size:1.1rem;font-weight:700;color:var(--success);margin-top:0.25rem;"></div>
+            </div>
+            <!-- AFTER -->
+            <div class="ats-gauge" style="padding:1rem;">
+              <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--success);margin-bottom:0.75rem;">After</div>
+              <div class="gauge-circle" id="gaugeAfter" style="width:130px;height:130px;"><span class="gauge-score" id="scoreAfter" style="font-size:2.2rem;">—</span></div>
+              <div class="gauge-label" style="margin-top:0.5rem;">Optimized Resume</div>
+            </div>
           </div>
+          <p id="atsSummary" style="color:var(--text2);text-align:center;max-width:600px;margin:0 auto;line-height:1.6;"></p>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
           <div class="card"><h3>❌ Missing Keywords</h3><div id="missingKeywords"></div></div>
@@ -989,54 +1021,94 @@ async function tailorToJob() {
   if (!jd) return alert('Please provide the job description');
   if (!resume || resume.length < 50) return alert('Please paste your resume');
 
-  // Step 1: ATS Analysis
-  showLoading('Analyzing your resume against the job posting...');
+  const country = document.getElementById('tailorCountry').value;
+
+  // Reset after score
+  document.getElementById('scoreAfter').textContent = '—';
+  document.getElementById('gaugeAfter').style.background = 'var(--bg)';
+  document.getElementById('scoreImprovement').textContent = '';
+
+  // Step 1: ATS Analysis (BEFORE)
+  showLoading('Step 1/4 — Analyzing your original resume...');
   try {
     const r1 = await fetch(API+'/api/resume/analyze', { method:'POST', headers:headers(),
-      body:JSON.stringify({ resumeText:resume, jobDescription:jd, targetCountry:document.getElementById('tailorCountry').value })
+      body:JSON.stringify({ resumeText:resume, jobDescription:jd, targetCountry:country })
     });
     const d1 = await r1.json();
     if (!r1.ok) { hideLoading(); return alert(d1.error||'Analysis failed'); }
-    renderAtsResult(d1.analysis);
+    renderAtsResult(d1.analysis, 'before');
   } catch(e) { hideLoading(); return alert('Analysis failed'); }
 
   // Step 2: Optimize resume
-  showLoading('Generating optimized resume...');
+  showLoading('Step 2/4 — Generating optimized resume...');
+  let optimizedText = '';
   try {
     const r2 = await fetch(API+'/api/resume/generate', { method:'POST', headers:headers(),
-      body:JSON.stringify({ mode:'optimize', jobDescription:jd, existingResume:resume, targetCountry:document.getElementById('tailorCountry').value })
+      body:JSON.stringify({ mode:'optimize', jobDescription:jd, existingResume:resume, targetCountry:country })
     });
     const d2 = await r2.json();
     if (!r2.ok) { hideLoading(); return alert(d2.error||'Optimization failed'); }
     renderResume(d2.resume, 'resumePreview2');
+    optimizedText = document.getElementById('resumePreview2').innerText;
   } catch(e) { hideLoading(); return alert('Resume optimization failed'); }
 
   // Step 3: Cover letter
-  showLoading('Writing your custom cover letter...');
+  showLoading('Step 3/4 — Writing your cover letter...');
   try {
     const r3 = await fetch(API+'/api/cover-letter/generate', { method:'POST', headers:headers(),
-      body:JSON.stringify({ jobDescription:jd, companyName:document.getElementById('tailorCompany').value, resumeText:resume, targetCountry:document.getElementById('tailorCountry').value })
+      body:JSON.stringify({ jobDescription:jd, companyName:document.getElementById('tailorCompany').value, resumeText:resume, targetCountry:country })
     });
-    const d3 = await r3.json(); hideLoading();
-    if (!r3.ok) { return alert(d3.error||'Cover letter failed'); }
-    document.getElementById('coverLetterOutput').textContent = d3.coverLetter;
-  } catch(e) { hideLoading(); alert('Cover letter generation failed'); }
+    const d3 = await r3.json();
+    if (r3.ok) { document.getElementById('coverLetterOutput').textContent = d3.coverLetter; }
+  } catch(e) { /* non-fatal */ }
 
+  // Step 4: Re-analyze optimized resume (AFTER score)
+  showLoading('Step 4/4 — Scoring your optimized resume...');
+  try {
+    const r4 = await fetch(API+'/api/resume/analyze', { method:'POST', headers:headers(),
+      body:JSON.stringify({ resumeText:optimizedText, jobDescription:jd, targetCountry:country })
+    });
+    const d4 = await r4.json();
+    if (r4.ok) { renderAtsResult(d4.analysis, 'after'); }
+  } catch(e) { /* non-fatal */ }
+
+  hideLoading();
   document.getElementById('tailorResults').classList.remove('hidden');
   document.getElementById('tailorResults').scrollIntoView({behavior:'smooth'});
 }
 
-function renderAtsResult(a) {
-  const score = a.atsScore;
-  const color = score>=70?'var(--success)':score>=50?'var(--warn)':'var(--danger)';
-  document.getElementById('gaugeCircle').style.background=`conic-gradient(${color} ${score*3.6}deg, var(--bg) 0)`;
-  document.getElementById('gaugeScore').textContent=score+'%';
-  document.getElementById('gaugeScore').style.color=color;
-  document.getElementById('atsSummary').textContent=a.summary||'';
-  document.getElementById('missingKeywords').innerHTML=(a.missingKeywords||[]).map(k=>`<span class="tag tag-red">${k}</span>`).join('')||'<span style="color:var(--text2)">None — great match!</span>';
-  document.getElementById('missingSkills').innerHTML=(a.missingSkills||[]).map(s=>`<span class="tag tag-red">${s}</span>`).join('')||'<span style="color:var(--text2)">None!</span>';
-  document.getElementById('strongPoints').innerHTML=(a.strongPoints||[]).map(p=>`<span class="tag tag-green">${p}</span>`).join('');
-  document.getElementById('recommendations').innerHTML=(a.recommendations||[]).map(r=>`<div class="rec-item"><strong>${r.category}:</strong> ${r.suggestion}</div>`).join('');
+function renderAtsResult(a, phase) {
+  if (phase === 'before') {
+    const score = a.atsScore;
+    const color = score>=70?'var(--success)':score>=50?'var(--warn)':'var(--danger)';
+    document.getElementById('gaugeBefore').style.background=`conic-gradient(${color} ${score*3.6}deg, var(--bg) 0)`;
+    document.getElementById('scoreBefore').textContent=score+'%';
+    document.getElementById('scoreBefore').style.color=color;
+    document.getElementById('atsSummary').textContent=a.summary||'';
+    document.getElementById('missingKeywords').innerHTML=(a.missingKeywords||[]).map(k=>`<span class="tag tag-red">${k}</span>`).join('')||'<span style="color:var(--text2)">None — great match!</span>';
+    document.getElementById('missingSkills').innerHTML=(a.missingSkills||[]).map(s=>`<span class="tag tag-red">${s}</span>`).join('')||'<span style="color:var(--text2)">None!</span>';
+    document.getElementById('strongPoints').innerHTML=(a.strongPoints||[]).map(p=>`<span class="tag tag-green">${p}</span>`).join('');
+    document.getElementById('recommendations').innerHTML=(a.recommendations||[]).map(r=>`<div class="rec-item"><strong>${r.category}:</strong> ${r.suggestion}</div>`).join('');
+    window._beforeScore = score;
+  } else if (phase === 'after') {
+    const score = a.atsScore;
+    const color = score>=70?'var(--success)':score>=50?'var(--warn)':'var(--danger)';
+    document.getElementById('gaugeAfter').style.background=`conic-gradient(${color} ${score*3.6}deg, var(--bg) 0)`;
+    document.getElementById('scoreAfter').textContent=score+'%';
+    document.getElementById('scoreAfter').style.color=color;
+    const before = window._beforeScore || 0;
+    const diff = score - before;
+    if (diff > 0) {
+      document.getElementById('scoreImprovement').textContent = '+' + diff + '%';
+      document.getElementById('scoreImprovement').style.color = 'var(--success)';
+    } else if (diff === 0) {
+      document.getElementById('scoreImprovement').textContent = '—';
+      document.getElementById('scoreImprovement').style.color = 'var(--text2)';
+    } else {
+      document.getElementById('scoreImprovement').textContent = diff + '%';
+      document.getElementById('scoreImprovement').style.color = 'var(--danger)';
+    }
+  }
 }
 
 function copyCoverLetter() {

@@ -30,14 +30,14 @@ Extract and return in this exact JSON format (no markdown, no backticks, just pu
   "location": "Their city/location or empty string",
   "linkedin": "Their LinkedIn URL or empty string",
   "summary": "Their professional summary/objective if present, or empty string",
-  "experience": "All work experience as readable text, preserving job titles, companies, dates, and bullet points. Keep the original descriptions.",
-  "education": "All education entries as readable text",
+  "experience": "CRITICAL: Separate each role clearly with TWO blank lines between jobs. Format each role as:\\nJob Title, Company Name, City/Country, StartDate – EndDate\\n- Achievement or responsibility 1\\n- Achievement or responsibility 2\\n- Achievement or responsibility 3\\n\\n(then next role). Preserve all original content but restructure into this clean format.",
+  "education": "Each degree on its own line: Degree, School, Date",
   "skills": "Comma-separated list of all skills found",
   "certifications": "Any certifications found, comma-separated",
-  "languages": "Any languages found, comma-separated"
+  "languages": "Any languages found with proficiency levels, comma-separated"
 }
 
-Be thorough — extract everything you can find. If a field is not present in the resume, use an empty string.`;
+IMPORTANT for the experience field: Each job MUST be clearly separated. Never merge multiple roles into one paragraph. Use newlines (\\n) to separate lines within a role and double newlines (\\n\\n) between different roles. Be thorough — extract everything you can find. If a field is not present in the resume, use an empty string.`;
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -48,7 +48,7 @@ Be thorough — extract everything you can find. If a field is not present in th
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: 3000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
