@@ -166,6 +166,11 @@ textarea{min-height:120px;}
 .parsed-field label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent);font-weight:600;margin-bottom:0.2rem;}
 .parsed-field .value{font-size:0.9rem;color:var(--text);line-height:1.5;}
 
+/* LANG TOGGLE */
+.lang-toggle{display:flex;gap:2px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;margin:0.75rem 0.5rem 0;}
+.lang-toggle button{flex:1;padding:0.35rem;border:none;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;background:transparent;color:var(--text2);font-family:inherit;transition:all 0.2s;}
+.lang-toggle button.active{background:var(--gradient);color:#fff;}
+
 .hidden{display:none!important;}
 
 /* PRINT CSS */
@@ -207,20 +212,24 @@ textarea{min-height:120px;}
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="logo">HireReady</div>
-  <div class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>Home</span></div>
+  <div class="lang-toggle">
+    <button class="active" onclick="setLang('en')">EN</button>
+    <button onclick="setLang('fr')">FR</button>
+  </div>
+  <div class="nav-item active" onclick="showPage('home')" style="margin-top:1rem;"><span class="icon">🏠</span><span data-i18n="nav.home">Home</span></div>
   <div class="nav-item" onclick="showPage('docs')">
-    <span class="icon">📁</span><span>My Documents</span>
+    <span class="icon">📁</span><span data-i18n="nav.docs">My Documents</span>
   </div>
   <div class="nav-item" onclick="showPage('resume')">
-    <span class="icon">📄</span><span>My Resume</span>
-    <span class="tier-badge tier-free">Free</span>
+    <span class="icon">📄</span><span data-i18n="nav.resume">My Resume</span>
+    <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
   </div>
   <div class="nav-item" onclick="showPage('tailor')">
-    <span class="icon">🎯</span><span>Tailor to Job</span>
+    <span class="icon">🎯</span><span data-i18n="nav.tailor">Tailor to Job</span>
     <span class="tier-badge tier-pro">Pro</span>
   </div>
   <div class="nav-item" onclick="showPage('interview')">
-    <span class="icon">🎤</span><span>Interview Prep</span>
+    <span class="icon">🎤</span><span data-i18n="nav.interview">Interview Prep</span>
     <span class="tier-badge tier-premium">Premium</span>
   </div>
   <div class="sidebar-footer">
@@ -231,7 +240,7 @@ textarea{min-height:120px;}
         <div class="user-plan" id="userPlan">Free</div>
       </div>
     </div>
-    <div class="nav-item" onclick="logout()" style="margin-top:0.5rem;"><span class="icon">🚪</span><span>Log Out</span></div>
+    <div class="nav-item" onclick="logout()" style="margin-top:0.5rem;"><span class="icon">🚪</span><span data-i18n="nav.logout">Log Out</span></div>
   </div>
 </aside>
 
@@ -737,6 +746,269 @@ let currentQuestion = 0;
 let scores = [];
 let deliveryScores = [];
 let savedResumeText = '';
+let currentLang = localStorage.getItem('hr_lang') || 'en';
+
+// ===================== TRANSLATIONS =====================
+const T = {
+  en: {
+    // Nav
+    'nav.home': 'Home', 'nav.docs': 'My Documents', 'nav.resume': 'My Resume',
+    'nav.tailor': 'Tailor to Job', 'nav.interview': 'Interview Prep', 'nav.logout': 'Log Out',
+    'tier.free': 'Free',
+    // Home
+    'home.welcome': 'Welcome,', 'home.subtitle': 'Your complete job preparation journey',
+    'home.step1': 'Build Resume', 'home.step2': 'Tailor to Job', 'home.step3': 'Interview Prep',
+    'home.resumes': 'Resumes Created', 'home.analyses': 'Jobs Analyzed', 'home.interviews': 'Interview Sessions',
+    'home.journey': 'Your Journey',
+    'home.s1': '<strong>Step 1 (Free):</strong> Create or upload your base resume. We\'ll structure it professionally.',
+    'home.s2': '<strong>Step 2 (Pro):</strong> Found a job? Paste the posting and we\'ll tailor your resume, optimize ATS keywords, and write a custom cover letter.',
+    'home.s3': '<strong>Step 3 (Premium):</strong> Prepare for the interview with AI-generated questions and voice-based simulation with tone feedback.',
+    'home.startBtn': '📄 Start with My Resume',
+    // Resume page
+    'resume.title': '📄 My Resume', 'resume.subtitle': 'Create or upload your base resume —',
+    'resume.tab.create': 'Create from Scratch', 'resume.tab.paste': 'Paste Existing', 'resume.tab.upload': '📎 Upload File',
+    'resume.info': 'Your Information', 'resume.name': 'Full Name', 'resume.email': 'Email',
+    'resume.phone': 'Phone', 'resume.location': 'Location', 'resume.linkedin': 'LinkedIn URL (optional)',
+    'resume.country': 'Target Country', 'resume.experience': 'Work Experience',
+    'resume.exp.placeholder': 'Describe your previous roles, achievements, and responsibilities:',
+    'resume.education': 'Education', 'resume.skills': 'Skills (comma-separated)',
+    'resume.buildBtn': '✨ Build My Resume — Free', 'resume.polishBtn': '✨ Polish My Resume — Free',
+    'resume.uploadTitle': 'Upload Your Resume File',
+    'resume.uploadDesc': 'Upload your PDF or Word document. We\'ll extract the content, figure out what goes where, and build a polished resume.',
+    'resume.uploadClick': '<strong>Click to upload</strong> or drag & drop your resume',
+    'resume.uploadFormats': 'Supports: PDF, DOCX, DOC, TXT',
+    'resume.pasteTitle': 'Paste Your Existing Resume', 'resume.pasteDesc': 'Paste the text of your resume below. We\'ll structure and polish it.',
+    'resume.parsed.success': '✅ Resume Parsed Successfully!',
+    'resume.parsed.review': 'Review the extracted info below, then click to build your polished resume.',
+    'resume.parsed.extracted': 'Extracted Information', 'resume.parsed.edit': 'You can edit any field before generating.',
+    'resume.parsed.personal': '👤 Personal Info', 'resume.parsed.work': '💼 Work Experience',
+    'resume.parsed.eduSkills': '🎓 Education & Skills', 'resume.parsed.editFull': '✏️ Edit in Full Form',
+    'resume.result': '✅ Your Resume', 'resume.copy': '📋 Copy Text', 'resume.pdf': '📥 Download PDF',
+    'resume.nextStep': '🎯 Ready to Apply for a Specific Job?',
+    'resume.nextStepDesc': 'Upgrade to Pro to tailor this resume to any job posting, get your ATS score, and generate a custom cover letter.',
+    'resume.nextStepBtn': 'Go to Tailor to Job →',
+    // Tailor page
+    'tailor.title': '🎯 Tailor to Job', 'tailor.subtitle': 'Optimize your resume for a specific posting —',
+    'tailor.jobPosting': 'The Job Posting', 'tailor.pasteDesc': 'Paste Description', 'tailor.pasteUrl': 'Paste URL',
+    'tailor.country': 'Target Country', 'tailor.company': 'Company Name (for cover letter)',
+    'tailor.yourResume': 'Your Resume', 'tailor.pickSaved': '📁 Pick from My Documents', 'tailor.pasteText': '📋 Paste Text',
+    'tailor.goBtn': '🚀 Tailor Resume + ATS Score + Cover Letter',
+    'tailor.comparison': '📊 ATS Score Comparison', 'tailor.before': 'Before', 'tailor.after': 'After',
+    'tailor.original': 'Original Resume', 'tailor.optimized': 'Optimized Resume',
+    'tailor.missing.kw': '❌ Missing Keywords', 'tailor.missing.skills': '❌ Missing Skills',
+    'tailor.strong': '✅ Strong Points', 'tailor.recs': '💡 Recommendations',
+    'tailor.optResume': '⚡ Optimized Resume', 'tailor.coverLetter': '✉️ Cover Letter',
+    'tailor.interviewCta': '🎤 Ready for the Interview?',
+    'tailor.interviewCtaDesc': 'Practice with AI-generated questions and get feedback on your answers — including voice delivery.',
+    'tailor.interviewCtaBtn': 'Prepare Interview for This Job →',
+    // Interview page
+    'int.title': '🎤 Interview Preparation', 'int.subtitle': 'Practice with voice simulation and AI feedback —',
+    'int.chooseJob': '🎯 Choose a Job to Practice For',
+    'int.chooseJobDesc': 'Select a job you\'ve already analyzed, or enter a new one below.',
+    'int.details': '📝 Job Details', 'int.detailsDesc': 'Auto-filled from your selection above, or edit manually.',
+    'int.jobTitle': 'Job Title', 'int.company': 'Company', 'int.jobDesc': 'Job Description',
+    'int.numQ': 'Number of Questions', 'int.startBtn': '🚀 Start Practice Interview',
+    'int.simulation': 'Interview Simulation', 'int.endBtn': 'End Session',
+    'int.micPrompt': 'Click the mic to answer vocally', 'int.orType': '— or type your answer —',
+    'int.submitBtn': 'Submit Answer', 'int.skipBtn': 'Skip', 'int.nextQ': 'Next Question →',
+    'int.seeSummary': 'See Summary →', 'int.summary': '📊 Session Summary',
+    'int.avgScore': 'Average Score (out of 10)', 'int.practiceAgain': 'Practice Again',
+    // Docs page
+    'docs.title': '📁 My Documents', 'docs.subtitle': 'All your resumes, tailored versions, and cover letters in one place',
+    'docs.all': 'All', 'docs.resumes': '📄 Resumes', 'docs.tailored': '🎯 Tailored', 'docs.covers': '✉️ Cover Letters',
+    'docs.empty': 'No documents yet', 'docs.emptyDesc': 'Create your first resume to get started!',
+    'docs.buildBtn': '📄 Build My Resume',
+    // Loading messages
+    'loading.analyzing': 'Step 1/4 — Analyzing your original resume...',
+    'loading.optimizing': 'Step 2/4 — Generating optimized resume...',
+    'loading.coverLetter': 'Step 3/4 — Writing your cover letter...',
+    'loading.scoring': 'Step 4/4 — Scoring your optimized resume...',
+    'loading.building': 'AI is building your resume...',
+    'loading.parsing': 'AI is analyzing your resume...',
+    'loading.interview': 'AI is preparing your interview...',
+    'loading.evaluating': 'AI is evaluating your answer...',
+    // Common
+    'common.copy': '📋 Copy', 'common.pdf': '📥 PDF', 'common.cancel': 'Cancel',
+    'q.questions': 'questions',
+  },
+  fr: {
+    // Nav
+    'nav.home': 'Accueil', 'nav.docs': 'Mes Documents', 'nav.resume': 'Mon CV',
+    'nav.tailor': 'Adapter au Poste', 'nav.interview': 'Prép. Entrevue', 'nav.logout': 'Déconnexion',
+    'tier.free': 'Gratuit',
+    // Home
+    'home.welcome': 'Bienvenue,', 'home.subtitle': 'Votre parcours complet de préparation à l\'emploi',
+    'home.step1': 'Créer CV', 'home.step2': 'Adapter au Poste', 'home.step3': 'Prép. Entrevue',
+    'home.resumes': 'CV Créés', 'home.analyses': 'Postes Analysés', 'home.interviews': 'Sessions d\'Entrevue',
+    'home.journey': 'Votre Parcours',
+    'home.s1': '<strong>Étape 1 (Gratuit) :</strong> Créez ou téléversez votre CV de base. Nous le structurerons professionnellement.',
+    'home.s2': '<strong>Étape 2 (Pro) :</strong> Trouvé un emploi ? Collez l\'offre et nous adapterons votre CV, optimiserons les mots-clés ATS et rédigerons une lettre de motivation personnalisée.',
+    'home.s3': '<strong>Étape 3 (Premium) :</strong> Préparez l\'entrevue avec des questions générées par IA et une simulation vocale avec rétroaction sur le ton.',
+    'home.startBtn': '📄 Commencer avec Mon CV',
+    // Resume page
+    'resume.title': '📄 Mon CV', 'resume.subtitle': 'Créez ou téléversez votre CV de base —',
+    'resume.tab.create': 'Créer de Zéro', 'resume.tab.paste': 'Coller un CV', 'resume.tab.upload': '📎 Téléverser',
+    'resume.info': 'Vos Informations', 'resume.name': 'Nom Complet', 'resume.email': 'Courriel',
+    'resume.phone': 'Téléphone', 'resume.location': 'Ville', 'resume.linkedin': 'URL LinkedIn (optionnel)',
+    'resume.country': 'Pays Cible', 'resume.experience': 'Expérience Professionnelle',
+    'resume.exp.placeholder': 'Décrivez vos postes précédents, réalisations et responsabilités :',
+    'resume.education': 'Formation', 'resume.skills': 'Compétences (séparées par des virgules)',
+    'resume.buildBtn': '✨ Créer Mon CV — Gratuit', 'resume.polishBtn': '✨ Améliorer Mon CV — Gratuit',
+    'resume.uploadTitle': 'Téléversez Votre CV',
+    'resume.uploadDesc': 'Téléversez votre PDF ou document Word. Nous extrairons le contenu et créerons un CV structuré.',
+    'resume.uploadClick': '<strong>Cliquez pour téléverser</strong> ou glissez-déposez votre CV',
+    'resume.uploadFormats': 'Formats : PDF, DOCX, DOC, TXT',
+    'resume.pasteTitle': 'Collez Votre CV Existant', 'resume.pasteDesc': 'Collez le texte de votre CV ci-dessous. Nous le structurerons.',
+    'resume.parsed.success': '✅ CV Analysé avec Succès !',
+    'resume.parsed.review': 'Vérifiez les informations extraites, puis cliquez pour créer votre CV.',
+    'resume.parsed.extracted': 'Informations Extraites', 'resume.parsed.edit': 'Vous pouvez modifier tout champ avant la génération.',
+    'resume.parsed.personal': '👤 Infos Personnelles', 'resume.parsed.work': '💼 Expérience Professionnelle',
+    'resume.parsed.eduSkills': '🎓 Formation et Compétences', 'resume.parsed.editFull': '✏️ Modifier le Formulaire',
+    'resume.result': '✅ Votre CV', 'resume.copy': '📋 Copier', 'resume.pdf': '📥 Télécharger PDF',
+    'resume.nextStep': '🎯 Prêt à Postuler ?',
+    'resume.nextStepDesc': 'Passez au Pro pour adapter ce CV à une offre d\'emploi, obtenir votre score ATS et générer une lettre de motivation.',
+    'resume.nextStepBtn': 'Adapter au Poste →',
+    // Tailor page
+    'tailor.title': '🎯 Adapter au Poste', 'tailor.subtitle': 'Optimisez votre CV pour une offre —',
+    'tailor.jobPosting': 'L\'Offre d\'Emploi', 'tailor.pasteDesc': 'Coller la Description', 'tailor.pasteUrl': 'Coller l\'URL',
+    'tailor.country': 'Pays Cible', 'tailor.company': 'Nom de l\'Entreprise (pour la lettre)',
+    'tailor.yourResume': 'Votre CV', 'tailor.pickSaved': '📁 Choisir dans Mes Documents', 'tailor.pasteText': '📋 Coller le Texte',
+    'tailor.goBtn': '🚀 Adapter CV + Score ATS + Lettre de Motivation',
+    'tailor.comparison': '📊 Comparaison du Score ATS', 'tailor.before': 'Avant', 'tailor.after': 'Après',
+    'tailor.original': 'CV Original', 'tailor.optimized': 'CV Optimisé',
+    'tailor.missing.kw': '❌ Mots-Clés Manquants', 'tailor.missing.skills': '❌ Compétences Manquantes',
+    'tailor.strong': '✅ Points Forts', 'tailor.recs': '💡 Recommandations',
+    'tailor.optResume': '⚡ CV Optimisé', 'tailor.coverLetter': '✉️ Lettre de Motivation',
+    'tailor.interviewCta': '🎤 Prêt pour l\'Entrevue ?',
+    'tailor.interviewCtaDesc': 'Entraînez-vous avec des questions générées par IA et obtenez une rétroaction sur vos réponses — y compris la livraison vocale.',
+    'tailor.interviewCtaBtn': 'Préparer l\'Entrevue pour ce Poste →',
+    // Interview page
+    'int.title': '🎤 Préparation à l\'Entrevue', 'int.subtitle': 'Entraînez-vous avec simulation vocale et rétroaction IA —',
+    'int.chooseJob': '🎯 Choisir un Poste',
+    'int.chooseJobDesc': 'Sélectionnez un poste déjà analysé ou entrez les détails ci-dessous.',
+    'int.details': '📝 Détails du Poste', 'int.detailsDesc': 'Rempli automatiquement ou modifiez manuellement.',
+    'int.jobTitle': 'Titre du Poste', 'int.company': 'Entreprise', 'int.jobDesc': 'Description du Poste',
+    'int.numQ': 'Nombre de Questions', 'int.startBtn': '🚀 Commencer l\'Entrevue',
+    'int.simulation': 'Simulation d\'Entrevue', 'int.endBtn': 'Terminer',
+    'int.micPrompt': 'Cliquez sur le micro pour répondre oralement', 'int.orType': '— ou tapez votre réponse —',
+    'int.submitBtn': 'Soumettre', 'int.skipBtn': 'Passer', 'int.nextQ': 'Question Suivante →',
+    'int.seeSummary': 'Voir le Résumé →', 'int.summary': '📊 Résumé de la Session',
+    'int.avgScore': 'Score Moyen (sur 10)', 'int.practiceAgain': 'Recommencer',
+    // Docs page
+    'docs.title': '📁 Mes Documents', 'docs.subtitle': 'Tous vos CV, versions adaptées et lettres de motivation',
+    'docs.all': 'Tout', 'docs.resumes': '📄 CV', 'docs.tailored': '🎯 Adaptés', 'docs.covers': '✉️ Lettres',
+    'docs.empty': 'Aucun document', 'docs.emptyDesc': 'Créez votre premier CV pour commencer !',
+    'docs.buildBtn': '📄 Créer Mon CV',
+    // Loading
+    'loading.analyzing': 'Étape 1/4 — Analyse de votre CV original...',
+    'loading.optimizing': 'Étape 2/4 — Génération du CV optimisé...',
+    'loading.coverLetter': 'Étape 3/4 — Rédaction de votre lettre...',
+    'loading.scoring': 'Étape 4/4 — Notation de votre CV optimisé...',
+    'loading.building': 'L\'IA construit votre CV...',
+    'loading.parsing': 'L\'IA analyse votre CV...',
+    'loading.interview': 'L\'IA prépare vos questions...',
+    'loading.evaluating': 'L\'IA évalue votre réponse...',
+    // Common
+    'common.copy': '📋 Copier', 'common.pdf': '📥 PDF', 'common.cancel': 'Annuler',
+    'q.questions': 'questions',
+  }
+};
+
+function t(key) { return T[currentLang]?.[key] || T['en']?.[key] || key; }
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('hr_lang', lang);
+  // Update toggle buttons
+  document.querySelectorAll('.lang-toggle button').forEach((b,i) => {
+    b.classList.toggle('active', (lang==='en'&&i===0)||(lang==='fr'&&i===1));
+  });
+  // Apply translations to data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.innerHTML = val;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    const val = t(key);
+    if (val) el.placeholder = val;
+  });
+  applyPageTranslations();
+}
+
+function applyPageTranslations() {
+  const L = currentLang;
+  
+  // ---- HOME ----
+  const greet = document.getElementById('greetName');
+  if (greet) {
+    const name = currentUser?.name?.split(' ')[0] || '';
+    greet.closest('h1').innerHTML = `👋 ${t('home.welcome')} <span id="greetName">${name}</span>`;
+  }
+  const homeSub = document.querySelector('#page-home .page-header p');
+  if (homeSub) homeSub.textContent = t('home.subtitle');
+
+  // Step flow
+  const steps = document.querySelectorAll('#page-home .step-label');
+  if (steps.length >= 3) {
+    steps[0].innerHTML = `${t('home.step1')} <span style="color:var(--success);font-weight:600;">${t('tier.free').toUpperCase()}</span>`;
+    steps[1].innerHTML = `${t('home.step2')} <span style="color:var(--accent);font-weight:600;">PRO</span>`;
+    steps[2].innerHTML = `${t('home.step3')} <span style="color:#c084fc;font-weight:600;">PREMIUM</span>`;
+  }
+
+  // Stats
+  const statLabels = document.querySelectorAll('#page-home .stat-label');
+  if (statLabels.length >= 3) { statLabels[0].textContent=t('home.resumes'); statLabels[1].textContent=t('home.analyses'); statLabels[2].textContent=t('home.interviews'); }
+
+  // Journey card
+  const journeyH = document.querySelector('#page-home .card h3');
+  if (journeyH) journeyH.innerHTML = `🚀 ${t('home.journey')}`;
+  const journeyP = document.querySelector('#page-home .card p');
+  if (journeyP) journeyP.innerHTML = `${t('home.s1')}<br>${t('home.s2')}<br>${t('home.s3')}`;
+  const startBtn = document.querySelector('#page-home .btn-primary');
+  if (startBtn) startBtn.textContent = t('home.startBtn');
+
+  // ---- RESUME PAGE ----
+  const rTitle = document.querySelector('#page-resume .page-header h1');
+  if (rTitle) rTitle.textContent = t('resume.title');
+  const rSub = document.querySelector('#page-resume .page-header p');
+  if (rSub) rSub.innerHTML = `${t('resume.subtitle')} <span style="color:var(--success);font-weight:600;">${t('tier.free').toUpperCase()}</span>`;
+
+  // Tab buttons
+  const rTabs = document.querySelectorAll('#page-resume .input-method button');
+  if (rTabs.length >= 3) { rTabs[0].textContent=t('resume.tab.create'); rTabs[1].textContent=t('resume.tab.paste'); rTabs[2].textContent=t('resume.tab.upload'); }
+
+  // ---- DOCS PAGE ----
+  const dTitle = document.querySelector('#page-docs .page-header h1');
+  if (dTitle) dTitle.textContent = t('docs.title');
+  const dSub = document.querySelector('#page-docs .page-header p');
+  if (dSub) dSub.textContent = t('docs.subtitle');
+  const dTabs = document.querySelectorAll('#page-docs .input-method button');
+  if (dTabs.length >= 4) { dTabs[0].textContent=t('docs.all'); dTabs[1].textContent=t('docs.resumes'); dTabs[2].textContent=t('docs.tailored'); dTabs[3].textContent=t('docs.covers'); }
+
+  // ---- TAILOR PAGE ----
+  const tTitle = document.querySelector('#page-tailor .page-header h1');
+  if (tTitle) tTitle.textContent = t('tailor.title');
+  const tSub = document.querySelector('#page-tailor .page-header p');
+  if (tSub) tSub.innerHTML = `${t('tailor.subtitle')} <span style="color:var(--accent);font-weight:600;">PRO</span>`;
+
+  // ---- INTERVIEW PAGE ----
+  const iTitle = document.querySelector('#page-interview .page-header h1');
+  if (iTitle) iTitle.textContent = t('int.title');
+  const iSub = document.querySelector('#page-interview .page-header p');
+  if (iSub) iSub.innerHTML = `${t('int.subtitle')} <span style="color:#c084fc;font-weight:600;">PREMIUM</span>`;
+}
+
+// Get language string for AI prompts
+function getLangInstruction() {
+  return currentLang === 'fr'
+    ? 'IMPORTANT: Generate ALL text content in FRENCH (Canadian French). All titles, descriptions, bullet points, summaries, feedback, and recommendations must be in French.'
+    : '';
+}
+
+// Initialize language on load
+setTimeout(() => setLang(currentLang), 100);
 
 // ===================== AUTH & USER =====================
 async function loadUser() {
@@ -916,7 +1188,7 @@ async function generateGenericResume() {
   showLoading('AI is building your resume...');
   try {
     const r = await fetch(API+'/api/resume/generate', { method:'POST', headers:headers(), body:JSON.stringify({
-      mode: 'generic',
+      mode: 'generic', language: currentLang,
       targetCountry: document.getElementById('rCountry').value,
       personalInfo: {
         name, email: document.getElementById('rEmail').value,
@@ -939,7 +1211,7 @@ async function uploadResume() {
   showLoading('AI is polishing your resume...');
   try {
     const r = await fetch(API+'/api/resume/generate', { method:'POST', headers:headers(), body:JSON.stringify({
-      mode: 'generic', targetCountry: document.getElementById('rUploadCountry').value,
+      mode: 'generic', language: currentLang, targetCountry: document.getElementById('rUploadCountry').value,
       personalInfo: { rawResume: text }
     })});
     const d = await r.json(); hideLoading();
@@ -1144,7 +1416,7 @@ async function generateFromParsed() {
   showLoading('AI is building your resume...');
   try {
     const r = await fetch(API+'/api/resume/generate', { method:'POST', headers:headers(), body:JSON.stringify({
-      mode: 'generic',
+      mode: 'generic', language: currentLang,
       targetCountry: document.getElementById('pCountry').value,
       personalInfo: {
         name: document.getElementById('pName').value,
@@ -1470,7 +1742,7 @@ async function tailorToJob() {
   showLoading('Step 1/4 — Analyzing your original resume...');
   try {
     const r1 = await fetch(API+'/api/resume/analyze', { method:'POST', headers:headers(),
-      body:JSON.stringify({ resumeText:resume, jobDescription:jd, targetCountry:country, jobTitle, companyName })
+      body:JSON.stringify({ resumeText:resume, jobDescription:jd, targetCountry:country, jobTitle, companyName, language:currentLang })
     });
     const d1 = await r1.json();
     if (!r1.ok) { hideLoading(); return alert(d1.error||'Analysis failed'); }
@@ -1494,7 +1766,7 @@ async function tailorToJob() {
   showLoading('Step 3/4 — Writing your cover letter...');
   try {
     const r3 = await fetch(API+'/api/cover-letter/generate', { method:'POST', headers:headers(),
-      body:JSON.stringify({ jobDescription:jd, companyName, resumeText:resume, targetCountry:country })
+      body:JSON.stringify({ jobDescription:jd, companyName, resumeText:resume, targetCountry:country, language:currentLang })
     });
     const d3 = await r3.json();
     if (r3.ok) { document.getElementById('coverLetterOutput').textContent = d3.coverLetter; }
@@ -1504,7 +1776,7 @@ async function tailorToJob() {
   showLoading('Step 4/4 — Scoring your optimized resume...');
   try {
     const r4 = await fetch(API+'/api/resume/analyze', { method:'POST', headers:headers(),
-      body:JSON.stringify({ resumeText:optimizedText, jobDescription:jd, targetCountry:country, jobTitle: jobTitle + ' (Optimized)', companyName })
+      body:JSON.stringify({ resumeText:optimizedText, jobDescription:jd, targetCountry:country, language:currentLang, jobTitle: jobTitle + ' (Optimized)', companyName })
     });
     const d4 = await r4.json();
     if (r4.ok) { renderAtsResult(d4.analysis, 'after'); }
@@ -1744,7 +2016,7 @@ async function startInterview() {
   showLoading('AI is preparing your interview...');
   try {
     const r = await fetch(API+'/api/interview/start', { method:'POST', headers:headers(), body:JSON.stringify({
-      jobDescription:jd, jobTitle:document.getElementById('intJobTitle').value,
+      jobDescription:jd, jobTitle:document.getElementById('intJobTitle').value, language:currentLang,
       questionCount:parseInt(document.getElementById('intCount').value),
       targetCountry:document.getElementById('intCountry').value
     })});
@@ -1804,7 +2076,7 @@ async function submitAnswer(idx) {
     const body = {
       sessionId: interviewData.sessionId, questionNumber: q.number,
       question: q.question, questionType: q.type, userAnswer: answer,
-      jobTitle: document.getElementById('intJobTitle').value
+      jobTitle: document.getElementById('intJobTitle').value, language: currentLang
     };
     if (window._voiceMetrics) body.voiceMetrics = window._voiceMetrics;
 

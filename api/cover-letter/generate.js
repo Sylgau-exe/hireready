@@ -12,7 +12,9 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { resumeText, jobDescription, companyName, targetCountry, tone } = req.body;
+  const { resumeText, jobDescription, companyName, targetCountry, tone, language } = req.body;
+  const langInstruction = language === 'fr' ? '
+IMPORTANT: Write the ENTIRE cover letter in FRENCH (Canadian French).' : '';
   if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
   try {
@@ -34,7 +36,7 @@ Write a cover letter that:
 4. Includes 2-3 specific achievements from the resume that match the job
 5. Ends with a confident call to action
 6. Follows cover letter conventions for ${targetCountry || 'Canada'}
-7. Is approximately 300-400 words
+7. Is approximately 300-400 words${langInstruction}
 
 Return in this exact JSON format (no markdown, no backticks):
 {

@@ -12,7 +12,9 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { jobDescription, jobTitle, questionCount, targetCountry } = req.body;
+  const { jobDescription, jobTitle, questionCount, targetCountry, language } = req.body;
+  const langInstruction = language === 'fr' ? '
+IMPORTANT: Generate ALL questions, hints, sample answers and tips in FRENCH.' : '';
   if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
   const count = Math.min(questionCount || 8, 15);
@@ -44,7 +46,9 @@ Return in this exact JSON format (no markdown, no backticks):
       "sampleAnswer": "A strong example answer (2-3 sentences)"
     }
   ],
-  "tips": ["General interview tip for ${targetCountry || 'Canada'} job market"]
+  ${langInstruction}
+
+"tips": ["General interview tip for ${targetCountry || 'Canada'} job market"]
 }`;
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {

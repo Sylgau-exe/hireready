@@ -12,10 +12,11 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { resumeText, jobDescription, targetCountry, jobTitle, companyName } = req.body;
+  const { resumeText, jobDescription, targetCountry, jobTitle, companyName, language } = req.body;
   if (!resumeText || !jobDescription) {
     return res.status(400).json({ error: 'Resume text and job description are required' });
   }
+  const langInstruction = language === 'fr' ? '\nIMPORTANT: Generate ALL text (summary, recommendations, tips) in FRENCH.' : '';
 
   try {
     const prompt = `You are an expert ATS (Applicant Tracking System) analyst and career coach. Analyze the following resume against the job description.
@@ -44,7 +45,7 @@ Provide your analysis in this exact JSON format (no markdown, no backticks, just
   "countryTips": ["tip about resume standards in ${targetCountry || 'Canada'}"]
 }
 
-Be specific and actionable. Score based on: keyword match (40%), skills alignment (25%), experience relevance (20%), formatting/structure (15%).`;
+Be specific and actionable. Score based on: keyword match (40%), skills alignment (25%), experience relevance (20%), formatting/structure (15%).${langInstruction}`;
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

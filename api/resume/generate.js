@@ -12,8 +12,9 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { mode, jobDescription, targetCountry, personalInfo, existingResume } = req.body;
+  const { mode, jobDescription, targetCountry, personalInfo, existingResume, language } = req.body;
   // mode: 'generic' (free, no JD), 'create' (from scratch with JD), or 'optimize' (existing resume with JD)
+  const langInstruction = language === 'fr' ? '\n\nIMPORTANT: Generate ALL content (summary, bullet points, tips) in FRENCH (Canadian French).' : '';
 
   if (mode !== 'generic' && !jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
@@ -61,7 +62,7 @@ Return the resume in this exact JSON format (no markdown, no backticks):
   "tips": ["Tip to improve this resume further"]
 }
 
-Follow resume standards for ${targetCountry || 'Canada'}. Use the person's real experience and present it in the best possible way. Use strong action verbs and quantify achievements where possible.`;
+Follow resume standards for ${targetCountry || 'Canada'}. Use strong action verbs and quantify achievements where possible.${langInstruction}`;
     } else if (mode === 'optimize' && existingResume) {
       prompt = `You are an expert resume writer and ATS optimization specialist.
 
@@ -107,7 +108,7 @@ Return the optimized resume in this exact JSON format (no markdown, no backticks
   "improvements": ["What was changed and why - bullet 1", "bullet 2"]
 }
 
-Follow resume standards for ${targetCountry || 'Canada'}. Use strong action verbs. Quantify achievements where possible.`;
+Follow resume standards for ${targetCountry || 'Canada'}. Use strong action verbs. Quantify achievements where possible.${langInstruction}`;
     } else {
       // Create from scratch
       prompt = `You are an expert resume writer specializing in ATS-optimized resumes.
@@ -154,7 +155,7 @@ Return the resume in this exact JSON format (no markdown, no backticks):
   "tips": ["Helpful tip about this resume"]
 }
 
-Follow resume standards for ${targetCountry || 'Canada'}. Use the person's real experience but present it optimally. Add relevant keywords from the job description naturally.`;
+Follow resume standards for ${targetCountry || 'Canada'}. Use relevant keywords naturally.${langInstruction}`;
     }
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {

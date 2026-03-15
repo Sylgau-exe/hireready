@@ -12,7 +12,9 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { sessionId, questionNumber, question, questionType, userAnswer, jobTitle, voiceMetrics } = req.body;
+  const { sessionId, questionNumber, question, questionType, userAnswer, jobTitle, voiceMetrics, language } = req.body;
+  const langInstruction = language === 'fr' ? '
+IMPORTANT: Write ALL feedback, suggestions and tips in FRENCH.' : '';
   if (!question || !userAnswer) return res.status(400).json({ error: 'Question and answer are required' });
 
   // voiceMetrics: { durationSec, wordCount, wordsPerMinute, fillerWords, fillerCount, wasSpoken }
@@ -50,6 +52,8 @@ Evaluate the answer and return in this exact JSON format (no markdown, no backti
   "deliveryFeedback": "Feedback on their verbal delivery — pace, filler words, confidence, conciseness (2-3 sentences)",
   "deliveryScore": <number 1-10>` : ''}
 }
+
+${langInstruction}
 
 Be encouraging but honest. If using STAR method questions, check for Situation, Task, Action, Result structure.`;
 

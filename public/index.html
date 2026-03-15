@@ -143,6 +143,10 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
     <a href="#pricing">Pricing</a>
     <a href="#" class="btn btn-outline" onclick="showModal('login')">Log In</a>
     <a href="#" class="btn btn-primary" onclick="showModal('register')">Get Started</a>
+    <div style="display:flex;gap:2px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px;margin-left:0.5rem;">
+      <button onclick="setPageLang('en')" style="padding:0.3rem 0.6rem;border:none;border-radius:4px;font-size:0.75rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#38bdf8,#818cf8);color:#fff;" id="langEn">EN</button>
+      <button onclick="setPageLang('fr')" style="padding:0.3rem 0.6rem;border:none;border-radius:4px;font-size:0.75rem;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;" id="langFr">FR</button>
+    </div>
   </div>
 </nav>
 
@@ -425,6 +429,75 @@ async function resetPassword() {
 }
 
 function googleLogin() { window.location.href = API+'/api/auth/google'; }
+
+// Language toggle for landing page
+function setPageLang(lang) {
+  localStorage.setItem('hr_lang', lang);
+  document.getElementById('langEn').style.background = lang==='en' ? 'linear-gradient(135deg,#38bdf8,#818cf8)' : 'transparent';
+  document.getElementById('langEn').style.color = lang==='en' ? '#fff' : '#94a3b8';
+  document.getElementById('langFr').style.background = lang==='fr' ? 'linear-gradient(135deg,#38bdf8,#818cf8)' : 'transparent';
+  document.getElementById('langFr').style.color = lang==='fr' ? '#fff' : '#94a3b8';
+  
+  const fr = lang === 'fr';
+  // Hero
+  document.querySelector('.badge').innerHTML = fr ? '🎯 Conçu par une immigrante, pour les chercheurs d\'emploi du monde entier' : '🎯 Built by an immigrant, for job seekers worldwide';
+  document.querySelector('.hero h1').innerHTML = fr ? 'Arrêtez d\'Envoyer des CV<br>dans le <span class="gradient">Vide</span>' : 'Stop Sending Resumes<br>Into the <span class="gradient">Void</span>';
+  document.querySelector('.hero p').textContent = fr ? 'Créateur de CV propulsé par IA, optimiseur ATS et simulateur d\'entrevue. Adapté à chaque offre, chaque pays, chaque étape de carrière.' : 'AI-powered resume builder, ATS optimizer, and interview simulator. Tailored to every job posting, every country, every career stage.';
+  document.querySelectorAll('.hero-ctas .btn')[0].textContent = fr ? 'Créer Mon CV →' : 'Build My Resume →';
+  document.querySelectorAll('.hero-ctas .btn')[1].textContent = fr ? 'Comment Ça Marche' : 'See How It Works';
+  // Stats
+  const stats = document.querySelectorAll('.social-proof div');
+  if (stats[0]) { stats[0].innerHTML = '<span class="stat-num">85%</span>' + (fr ? ' Taux ATS' : ' ATS pass rate'); }
+  if (stats[1]) { stats[1].innerHTML = '<span class="stat-num">6+</span>' + (fr ? ' Pays supportés' : ' Countries supported'); }
+  if (stats[2]) { stats[2].innerHTML = '<span class="stat-num">IA</span>' + (fr ? ' Coach d\'entrevue' : ' Interview coach'); }
+  // Section titles
+  document.querySelector('#features .section-label').textContent = fr ? 'Fonctionnalités' : 'Features';
+  document.querySelector('#features .section-title').textContent = fr ? 'Tout Ce Qu\'il Faut pour Décrocher un Emploi' : 'Everything You Need to Get Hired';
+  document.querySelector('#features .section-sub').textContent = fr ? 'De la création de votre premier CV à la réussite de l\'entrevue finale — nous couvrons tout le parcours.' : 'From building your first resume to acing the final interview — we cover the entire journey.';
+  // Feature cards
+  const featureNames = fr ? ['Créateur de CV','Analyse ATS','Optimisation IA','Lettres de Motivation','Prép. Entrevue','Simulateur d\'Entrevue'] : ['Resume Builder','ATS Score Analysis','Smart Optimization','Cover Letters','Interview Prep','Interview Simulator'];
+  const featureDescs = fr ?
+    ['Créez un CV professionnel de zéro ou collez votre CV existant. Adapté à la description du poste et aux normes du pays.',
+     'Voyez exactement comment votre CV se mesure face aux systèmes de tri automatique. Obtenez les mots-clés manquants.',
+     'L\'IA réécrit votre expérience pour correspondre aux exigences du poste tout en restant authentique.',
+     'Générez des lettres personnalisées qui font référence à l\'offre et à votre expérience.',
+     'Obtenez les questions probables basées sur la description du poste, avec des structures de réponse recommandées.',
+     'Entraînez-vous à répondre et obtenez une rétroaction IA en temps réel sur vos réponses.'] :
+    ['Create a professional resume from scratch or paste your existing one. Tailored to the job description and country standards.',
+     'See exactly how your resume scores against automated screening systems. Get missing keywords and specific fixes.',
+     'AI rewrites your experience to match job requirements while keeping it authentic. Boost your score from 45% to 85%+.',
+     'Generate custom cover letters that reference the job posting and your specific experience. No more generic templates.',
+     'Get likely interview questions based on the actual job description, with recommended answer structures.',
+     'Practice answering questions and get real-time AI feedback on your responses. Build confidence before the real thing.'];
+  document.querySelectorAll('.feature-card').forEach((card,i) => {
+    card.querySelector('h3').textContent = featureNames[i] || '';
+    card.querySelector('p').textContent = featureDescs[i] || '';
+  });
+  // How it works
+  document.querySelector('#how .section-title').textContent = fr ? 'Quatre Étapes vers Votre Prochain Emploi' : 'Four Steps to Your Next Job';
+  const stepNames = fr ? ['Coller l\'Offre','Créer ou Téléverser','Optimiser et Générer','Pratiquer l\'Entrevue'] : ['Paste Job Posting','Build or Upload','Optimize & Generate','Practice Interview'];
+  document.querySelectorAll('.step h3').forEach((h,i) => h.textContent = stepNames[i] || '');
+  // Pricing
+  document.querySelector('#pricing .section-title').textContent = fr ? 'Tarification Simple et Transparente' : 'Simple, Transparent Pricing';
+  // CTA
+  document.querySelector('.final-cta h2').innerHTML = fr ? 'Prêt à Décrocher Cette <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Entrevue</span> ?' : 'Ready to Land That <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Interview</span>?';
+  document.querySelector('.final-cta p').textContent = fr ? 'Rejoignez les chercheurs d\'emploi qui ont arrêté de deviner et ont commencé à recevoir des rappels.' : 'Join thousands of job seekers who stopped guessing and started getting callbacks.';
+  document.querySelector('.final-cta .btn-primary').textContent = fr ? 'Commencer à Créer Mon CV →' : 'Start Building My Resume →';
+  // Nav links
+  document.querySelectorAll('.nav-links a')[0].textContent = fr ? 'Fonctionnalités' : 'Features';
+  document.querySelectorAll('.nav-links a')[1].textContent = fr ? 'Comment ça marche' : 'How It Works';
+  document.querySelectorAll('.nav-links a')[2].textContent = fr ? 'Tarifs' : 'Pricing';
+  document.querySelectorAll('.nav-links .btn-outline')[0].textContent = fr ? 'Connexion' : 'Log In';
+  // Auth modal
+  const loginH = document.querySelector('#loginForm h2');
+  if (loginH) loginH.textContent = fr ? 'Bon Retour' : 'Welcome Back';
+  const regH = document.querySelector('#registerForm h2');
+  if (regH) regH.textContent = fr ? 'Créer un Compte' : 'Create Account';
+}
+
+// Apply saved language on landing page load
+const savedLang = localStorage.getItem('hr_lang');
+if (savedLang === 'fr') setTimeout(() => setPageLang('fr'), 50);
 
 // Handle URL params on load
 window.addEventListener('DOMContentLoaded', () => {
