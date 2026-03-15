@@ -647,27 +647,49 @@ textarea{min-height:120px;}
     <div id="premiumContent">
       <!-- SETUP -->
       <div id="interviewSetup">
+        <!-- Pick from previous jobs -->
         <div class="card">
-          <h3>🎯 Set Up Your Session</h3>
+          <h3>🎯 Choose a Job to Practice For</h3>
+          <p style="color:var(--text2);margin-bottom:1rem;">Select a job you've already analyzed, or enter a new one below.</p>
+          <div id="interviewJobPicker">
+            <p style="color:var(--text2);font-size:0.9rem;">Loading your recent jobs...</p>
+          </div>
+        </div>
+
+        <!-- Manual / Edit -->
+        <div class="card" id="interviewManualCard">
+          <h3>📝 Job Details</h3>
+          <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem;">Auto-filled from your selection above, or edit manually.</p>
           <div class="form-row">
             <div class="form-group"><label>Job Title</label><input type="text" id="intJobTitle" placeholder="Marketing Manager"></div>
+            <div class="form-group"><label>Company</label><input type="text" id="intCompany" placeholder="Shopify"></div>
+          </div>
+          <div class="form-group"><label>Job Description</label>
+            <textarea id="intJobDesc" style="min-height:150px;" placeholder="Paste job description or select a job above..."></textarea>
+          </div>
+          <div class="form-row">
             <div class="form-group"><label>Number of Questions</label>
               <select id="intCount">
                 <option value="5">5 questions</option><option value="8" selected>8 questions</option>
                 <option value="10">10 questions</option><option value="12">12 questions</option>
               </select>
             </div>
-          </div>
-          <div class="form-group"><label>Job Description</label>
-            <textarea id="intJobDesc" placeholder="Paste the job description (or it will be auto-filled if coming from Tailor step)..."></textarea>
-          </div>
-          <div class="form-group"><label>Target Country</label>
-            <select id="intCountry">
-              <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
-              <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
-            </select>
+            <div class="form-group"><label>Target Country</label>
+              <select id="intCountry">
+                <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+                <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+              </select>
+            </div>
           </div>
           <button class="btn btn-primary" onclick="startInterview()">🚀 Start Practice Interview</button>
+        </div>
+
+        <!-- Last session score recap -->
+        <div id="lastSessionRecap" class="hidden">
+          <div class="card" style="background:rgba(56,189,248,0.05);border-color:rgba(56,189,248,0.15);">
+            <h3>📊 Your Last Session</h3>
+            <div id="lastSessionInfo"></div>
+          </div>
         </div>
       </div>
 
@@ -751,6 +773,8 @@ function showPage(page) {
   if (page === 'tailor') loadSavedResumes();
   // Load documents when switching to docs page
   if (page === 'docs') loadDocuments();
+  // Load previous jobs for interview page
+  if (page === 'interview') loadInterviewJobs();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -1525,10 +1549,90 @@ function copyCoverLetter() {
 
 function prepInterviewFromTailor() {
   document.getElementById('intJobDesc').value = getJobDesc();
+  document.getElementById('intCompany').value = document.getElementById('tailorCompany').value || '';
   showPage('interview');
 }
 
 // ===================== INTERVIEW (PREMIUM) =====================
+// Load previous jobs from analyses for the picker
+async function loadInterviewJobs() {
+  const container = document.getElementById('interviewJobPicker');
+  // Don't reload if job desc is already filled (coming from tailor page)
+  if (document.getElementById('intJobDesc').value.trim().length > 50) {
+    container.innerHTML = `<div style="padding:0.75rem 1rem;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;display:flex;align-items:center;gap:0.5rem;">
+      <span>✅</span><span style="font-size:0.9rem;">Job description loaded from your last analysis. Edit below if needed.</span>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = '<p style="color:var(--text2);font-size:0.9rem;">Loading...</p>';
+  try {
+    const r = await fetch(API+'/api/documents/list', { headers:headers() });
+    const d = await r.json();
+    if (!r.ok) throw new Error();
+
+    const jobs = (d.analyses || []).filter(a => a.ats_score > 0 && a.job_description);
+    // Also get interview sessions for last score
+    
+    if (jobs.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:1.5rem;background:var(--bg);border-radius:12px;border:1px dashed var(--border);">
+        <p style="color:var(--text2);margin-bottom:0.75rem;">No previous job analyses found.</p>
+        <p style="color:var(--text2);font-size:0.85rem;">Enter job details manually below, or go to <a href="#" onclick="showPage('tailor');return false;" style="color:var(--accent);">Tailor to Job</a> first.</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = jobs.map((job, idx) => {
+      const date = new Date(job.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+      const scoreColor = job.ats_score>=70?'var(--success)':job.ats_score>=50?'var(--warn)':'var(--danger)';
+      const title = job.company_name || 'Job Analysis';
+      // Extract a rough job title from description first line
+      const descPreview = (job.job_description||'').substring(0, 80).split('\n')[0];
+      return `<div onclick="selectInterviewJob(${idx})" style="padding:1rem;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;" class="int-job-card" data-idx="${idx}"
+        onmouseover="this.style.borderColor='rgba(56,189,248,0.3)'" onmouseout="if(!this.classList.contains('selected'))this.style.borderColor=''">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:1.3rem;">🎯</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;">${title}</div>
+            <div style="color:var(--text2);font-size:0.8rem;">${descPreview}... · ${date}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-weight:700;color:${scoreColor};font-size:0.9rem;">${job.ats_score}%</span>
+          <div class="int-job-check" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--accent);"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    window._interviewJobs = jobs;
+  } catch(e) {
+    console.error('Load interview jobs error:', e);
+    container.innerHTML = '<p style="color:var(--text2);font-size:0.9rem;">Enter job details manually below.</p>';
+  }
+}
+
+function selectInterviewJob(idx) {
+  const job = (window._interviewJobs || [])[idx];
+  if (!job) return;
+
+  // Fill fields
+  document.getElementById('intJobDesc').value = job.job_description || '';
+  document.getElementById('intCompany').value = job.company_name || '';
+  if (job.job_title) document.getElementById('intJobTitle').value = job.job_title;
+
+  // Update UI
+  document.querySelectorAll('.int-job-card').forEach((card, i) => {
+    const isThis = parseInt(card.dataset.idx) === idx;
+    card.style.background = isThis ? 'rgba(56,189,248,0.1)' : 'var(--bg)';
+    card.style.borderColor = isThis ? 'var(--accent)' : '';
+    card.classList.toggle('selected', isThis);
+    card.querySelector('.int-job-check').innerHTML = isThis ? '✓' : '';
+    card.querySelector('.int-job-check').style.borderColor = isThis ? 'var(--accent)' : 'var(--border)';
+  });
+
+  // Scroll to form
+  document.getElementById('interviewManualCard').scrollIntoView({ behavior:'smooth' });
+}
 // Speech Recognition setup
 let recognition = null;
 let isRecording = false;
