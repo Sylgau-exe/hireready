@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { resumeText, jobDescription, targetCountry } = req.body;
+  const { resumeText, jobDescription, targetCountry, jobTitle, companyName } = req.body;
   if (!resumeText || !jobDescription) {
     return res.status(400).json({ error: 'Resume text and job description are required' });
   }
@@ -80,8 +80,8 @@ Be specific and actionable. Score based on: keyword match (40%), skills alignmen
     // Save to DB
     try {
       await sql`
-        INSERT INTO ats_analyses (user_id, job_description, ats_score, missing_keywords, missing_skills, recommendations)
-        VALUES (${decoded.userId}, ${jobDescription.substring(0, 5000)}, ${analysis.atsScore}, 
+        INSERT INTO ats_analyses (user_id, job_title, company_name, job_description, ats_score, missing_keywords, missing_skills, recommendations)
+        VALUES (${decoded.userId}, ${jobTitle || ''}, ${companyName || ''}, ${jobDescription.substring(0, 5000)}, ${analysis.atsScore}, 
                 ${JSON.stringify(analysis.missingKeywords)}, ${JSON.stringify(analysis.missingSkills)},
                 ${JSON.stringify(analysis.recommendations)})
       `;
