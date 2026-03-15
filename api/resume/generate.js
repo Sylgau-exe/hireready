@@ -49,55 +49,15 @@ export default async function handler(req, res) {
 
     if (mode === 'generic' && translateTo) {
       // TRANSLATION MODE: explicitly translate resume content to another language
+      console.log('TRANSLATION MODE: translating to', translateTo);
       const targetLangName = translateTo === 'fr' ? 'FRENCH (Canadian French / québécois)' : 'ENGLISH';
       const rawText = personalInfo?.rawResume || JSON.stringify(personalInfo);
-      prompt = `You are a professional bilingual resume translator.
+      prompt = `TRANSLATE this resume to ${targetLangName}. Keep names, companies, cities, dates unchanged. Translate everything else.
 
-YOUR TASK: TRANSLATE the following resume into ${targetLangName}. 
+${rawText.substring(0, 2500)}
 
-RULES:
-- TRANSLATE every piece of text: the professional summary, all job titles, all bullet points, all skill names, education descriptions
-- DO NOT keep the content in the original language
-- KEEP proper nouns unchanged: person's name, company names (McGill University, Cirque Du Soleil, etc.), city names
-- KEEP dates, phone numbers, and email unchanged
-- The output must be a COMPLETE resume entirely in ${targetLangName}
-
-RESUME TO TRANSLATE:
-${rawText.substring(0, 4000)}
-
-Return the TRANSLATED resume in this exact JSON format (no markdown, no backticks):
-{
-  "fullName": "Keep original name",
-  "email": "Keep original",
-  "phone": "Keep original",
-  "location": "Keep original",
-  "linkedinUrl": "Keep original",
-  "summary": "THE PROFESSIONAL SUMMARY TRANSLATED INTO ${targetLangName}",
-  "experience": [
-    {
-      "title": "JOB TITLE TRANSLATED INTO ${targetLangName}",
-      "company": "Keep original company name",
-      "location": "Keep original",
-      "startDate": "Keep original",
-      "endDate": "${translateTo === 'fr' ? 'Keep original or use Présent' : 'Keep original or use Present'}",
-      "bullets": ["EACH BULLET POINT TRANSLATED INTO ${targetLangName}"]
-    }
-  ],
-  "education": [
-    {
-      "degree": "DEGREE NAME TRANSLATED INTO ${targetLangName}",
-      "school": "Keep original school name",
-      "year": "Keep original",
-      "details": ""
-    }
-  ],
-  "skills": ["EACH SKILL TRANSLATED INTO ${targetLangName}"],
-  "certifications": [],
-  "languages": [],
-  "tips": []
-}
-
-CRITICAL: Every text value in the JSON must be in ${targetLangName}. Do NOT return English content when asked for French.`;
+Return as JSON (no markdown):
+{"fullName":"keep original","email":"keep","phone":"keep","location":"keep","linkedinUrl":"keep","summary":"TRANSLATED summary","experience":[{"title":"TRANSLATED title","company":"keep","location":"keep","startDate":"keep","endDate":"keep","bullets":["TRANSLATED bullet"]}],"education":[{"degree":"TRANSLATED","school":"keep","year":"keep","details":""}],"skills":["TRANSLATED"],"certifications":[],"languages":[],"tips":[]}`;
     } else if (mode === 'generic') {
       // FREE TIER: Generic resume, no job description needed
       const langTop = language === 'fr' 
@@ -241,6 +201,18 @@ Return the resume in this exact JSON format (no markdown, no backticks):
 Follow resume standards for ${targetCountry || 'Canada'}. Use relevant keywords naturally.${langInstruction}`;
     }
 
+    const apiBody = {
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 3000,
+      messages: [{ role: 'user', content: prompt }]
+    };
+
+    // Add system prompt for translation to force language output
+    if (translateTo) {
+      const sysLang = translateTo === 'fr' ? 'French (Canadian French)' : 'English';
+      apiBody.system = `You are a resume translator. You MUST output ALL text content in ${sysLang}. Every single field value in your JSON response — summary, job titles, bullet points, skills, education — must be written in ${sysLang}. This is non-negotiable. If the input is in English and the target is French, you translate everything to French. Never return content in the original language.`;
+    }
+
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -248,11 +220,7 @@ Follow resume standards for ${targetCountry || 'Canada'}. Use relevant keywords 
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify(apiBody)
     });
 
     if (!aiResponse.ok) {
