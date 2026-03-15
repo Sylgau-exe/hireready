@@ -241,8 +241,8 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
   <h2 class="section-title">Simple, Transparent Pricing</h2>
   <p class="section-sub">No hidden fees. Full access from day one.</p>
   <div class="price-toggle">
-    <button class="active" onclick="togglePricing('once')">One-Time</button>
-    <button onclick="togglePricing('monthly')">Monthly</button>
+    <button class="active" onclick="togglePricing('monthly')">Monthly</button>
+    <button onclick="togglePricing('annual')">Annual / Lifetime</button>
   </div>
   <div class="pricing-grid" id="pricing-cards">
     <!-- Filled by JS -->
@@ -329,21 +329,21 @@ const API = '';
 
 // Pricing data
 const pricing = {
-  once: [
-    { name:'Resume', price:'$15', sub:'one-time', features:['Resume optimization','ATS analysis','Cover letter'], cta:'Get Started' },
-    { name:'Pro', price:'$29', sub:'one-time', features:['Resume optimization','ATS analysis','Cover letter','Job description analysis'], cta:'Go Pro', featured:true },
-    { name:'Premium', price:'$49', sub:'one-time', features:['Everything in Pro','Interview preparation','Interview simulation','Answer coaching'], cta:'Go Premium' }
-  ],
   monthly: [
-    { name:'Basic', price:'$12', sub:'/month', features:['Create resumes from scratch','Adapt to job descriptions','Keyword optimization','Country formatting','Cover letters'], cta:'Subscribe' },
-    { name:'Pro', price:'$19', sub:'/month', features:['Everything in Basic','ATS score analysis','Improvement recommendations','Multiple resume versions'], cta:'Subscribe', featured:true },
-    { name:'Premium', price:'$29', sub:'/month', features:['Everything in Pro','Interview preparation','Interview simulation','Unlimited optimizations'], cta:'Subscribe' }
+    { name:'Free', price:'$0', sub:'', features:['Create your resume','Professional formatting','PDF export','Bilingual EN/FR'], cta:'Get Started', free:true },
+    { name:'Pro', price:'$19', sub:'/month', features:['Resume optimization vs job target','ATS score analysis','Custom cover letter','Keyword recommendations'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$29', sub:'/month', features:['Everything in Pro','Interview preparation','Interview simulation','Answer coaching','Voice feedback'], cta:'Go Premium' }
+  ],
+  annual: [
+    { name:'Free', price:'$0', sub:'', features:['Create your resume','Professional formatting','PDF export','Bilingual EN/FR'], cta:'Get Started', free:true },
+    { name:'Pro', price:'$149', sub:'/year', features:['Resume optimization vs job target','ATS score analysis','Custom cover letter','Keyword recommendations','Save $79/year'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$269', sub:' lifetime', features:['Everything in Pro','Interview preparation','Interview simulation','Answer coaching','Voice feedback','Unlimited forever'], cta:'Go Premium' }
   ]
 };
 
 function togglePricing(type) {
   document.querySelectorAll('.price-toggle button').forEach((b,i) => {
-    b.classList.toggle('active', (type==='once'&&i===0)||(type==='monthly'&&i===1));
+    b.classList.toggle('active', (type==='monthly'&&i===0)||(type==='annual'&&i===1));
   });
   const cards = pricing[type].map(p => `
     <div class="price-card ${p.featured?'featured':''}">
@@ -356,7 +356,7 @@ function togglePricing(type) {
   `).join('');
   document.getElementById('pricing-cards').innerHTML = cards;
 }
-togglePricing('once');
+togglePricing('monthly');
 
 // Auth
 function showModal(form) {
