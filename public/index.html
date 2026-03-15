@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HireReady — Land Your Dream Job with AI</title>
+<meta name="description" content="AI-powered resume builder, ATS optimizer, and interview simulator. Tailored for immigrants and international professionals.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050a12;
+  --bg2: #0b1120;
+  --bg3: #111827;
+  --card: #141c2e;
+  --border: rgba(255,255,255,0.07);
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  --glow: rgba(56,189,248,0.25);
+  --success: #34d399;
+  --warn: #fbbf24;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+h1,h2,h3 { font-family:'Fraunces',serif; }
+
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between; background:rgba(5,10,18,0.8); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+.logo { font-family:'Fraunces',serif; font-size:1.5rem; font-weight:700; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.nav-links { display:flex; gap:2rem; align-items:center; }
+.nav-links a { color:var(--text2); text-decoration:none; font-size:0.9rem; transition:color 0.2s; }
+.nav-links a:hover { color:var(--text); }
+.btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.65rem 1.5rem; border-radius:8px; font-weight:600; font-size:0.9rem; border:none; cursor:pointer; transition:all 0.25s; text-decoration:none; }
+.btn-primary { background:var(--gradient); color:#fff; box-shadow:0 4px 20px var(--glow); }
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px var(--glow); }
+.btn-outline { background:transparent; color:var(--accent); border:1px solid rgba(56,189,248,0.3); }
+.btn-outline:hover { background:rgba(56,189,248,0.1); border-color:var(--accent); }
+.btn-google { background:#fff; color:#333; font-weight:500; }
+.btn-google:hover { background:#f0f0f0; }
+.btn-block { width:100%; justify-content:center; }
+
+/* HERO */
+.hero { min-height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:8rem 2rem 4rem; position:relative; }
+.hero::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:800px; height:800px; background:radial-gradient(circle, rgba(56,189,248,0.12) 0%, rgba(129,140,248,0.06) 40%, transparent 70%); pointer-events:none; }
+.hero-content { max-width:720px; position:relative; z-index:1; }
+.badge { display:inline-flex; align-items:center; gap:0.5rem; padding:0.4rem 1rem; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.2); border-radius:100px; font-size:0.8rem; color:var(--accent); margin-bottom:1.5rem; }
+.hero h1 { font-size:3.5rem; line-height:1.1; margin-bottom:1.5rem; letter-spacing:-0.02em; }
+.hero h1 .gradient { background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:1.2rem; color:var(--text2); line-height:1.7; max-width:560px; margin:0 auto 2rem; }
+.hero-ctas { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+.social-proof { margin-top:3rem; display:flex; align-items:center; justify-content:center; gap:2rem; color:var(--text2); font-size:0.9rem; }
+.stat-num { font-family:'Fraunces',serif; font-size:1.4rem; color:var(--text); display:block; }
+
+/* SECTIONS */
+section { padding:6rem 2rem; max-width:1100px; margin:0 auto; }
+.section-label { display:inline-block; font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:0.75rem; }
+.section-title { font-size:2.2rem; margin-bottom:1rem; }
+.section-sub { color:var(--text2); font-size:1.05rem; max-width:600px; line-height:1.7; margin-bottom:3rem; }
+
+/* FEATURES */
+.features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
+.feature-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:2rem; transition:all 0.3s; }
+.feature-card:hover { border-color:rgba(56,189,248,0.3); transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,0.3); }
+.feature-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; margin-bottom:1rem; }
+.feature-card h3 { font-size:1.1rem; margin-bottom:0.5rem; font-family:'DM Sans',sans-serif; font-weight:600; }
+.feature-card p { color:var(--text2); font-size:0.9rem; line-height:1.6; }
+
+/* HOW IT WORKS */
+.steps { display:grid; grid-template-columns:repeat(4,1fr); gap:2rem; counter-reset:step; }
+.step { text-align:center; position:relative; }
+.step::before { counter-increment:step; content:counter(step); width:48px; height:48px; border-radius:50%; background:var(--gradient); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.2rem; margin:0 auto 1rem; }
+.step h3 { font-size:1rem; margin-bottom:0.5rem; font-family:'DM Sans',sans-serif; font-weight:600; }
+.step p { color:var(--text2); font-size:0.85rem; line-height:1.6; }
+
+/* PRICING */
+.pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; align-items:start; }
+.price-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:2rem; position:relative; }
+.price-card.featured { border-color:var(--accent); box-shadow:0 0 40px var(--glow); }
+.popular-badge { position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:var(--gradient); color:#fff; padding:0.25rem 1rem; border-radius:100px; font-size:0.75rem; font-weight:600; white-space:nowrap; }
+.price-card h3 { font-size:1.2rem; margin-bottom:0.5rem; font-family:'DM Sans',sans-serif; font-weight:600; }
+.price-card .price { font-family:'Fraunces',serif; font-size:2.5rem; margin:1rem 0; }
+.price-card .price span { font-size:0.9rem; color:var(--text2); font-family:'DM Sans',sans-serif; }
+.price-card ul { list-style:none; margin:1.5rem 0; }
+.price-card li { padding:0.4rem 0; color:var(--text2); font-size:0.9rem; display:flex; align-items:center; gap:0.5rem; }
+.price-card li::before { content:'✓'; color:var(--success); font-weight:700; }
+.price-toggle { display:flex; gap:0.5rem; justify-content:center; margin-bottom:2rem; background:var(--card); padding:0.25rem; border-radius:8px; border:1px solid var(--border); width:fit-content; margin-left:auto; margin-right:auto; }
+.price-toggle button { padding:0.5rem 1.5rem; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:500; background:transparent; color:var(--text2); transition:all 0.2s; }
+.price-toggle button.active { background:var(--gradient); color:#fff; }
+
+/* COUNTRY */
+.country-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; }
+.country-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; text-align:center; }
+.country-card .flag { font-size:2rem; margin-bottom:0.5rem; }
+.country-card h3 { font-size:1rem; margin-bottom:0.25rem; font-family:'DM Sans',sans-serif; }
+.country-card p { color:var(--text2); font-size:0.8rem; }
+
+/* CTA */
+.final-cta { text-align:center; padding:6rem 2rem; background:radial-gradient(ellipse at center, rgba(56,189,248,0.08) 0%, transparent 60%); }
+.final-cta h2 { font-size:2.5rem; margin-bottom:1rem; }
+.final-cta p { color:var(--text2); margin-bottom:2rem; font-size:1.1rem; }
+
+/* FOOTER */
+footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:center; color:var(--text2); font-size:0.85rem; }
+
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:2.5rem; width:420px; max-width:90vw; max-height:90vh; overflow-y:auto; position:relative; }
+.modal h2 { font-size:1.5rem; margin-bottom:0.5rem; text-align:center; }
+.modal .subtitle { color:var(--text2); text-align:center; margin-bottom:1.5rem; font-size:0.9rem; }
+.modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text2); font-size:1.5rem; cursor:pointer; }
+.form-group { margin-bottom:1rem; }
+.form-group label { display:block; font-size:0.85rem; color:var(--text2); margin-bottom:0.35rem; }
+.form-group input, .form-group select, .form-group textarea { width:100%; padding:0.7rem 1rem; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:0.9rem; font-family:inherit; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(56,189,248,0.1); }
+.form-divider { display:flex; align-items:center; gap:1rem; margin:1.2rem 0; color:var(--text2); font-size:0.8rem; }
+.form-divider::before, .form-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.form-switch { text-align:center; margin-top:1rem; color:var(--text2); font-size:0.85rem; }
+.form-switch a { color:var(--accent); cursor:pointer; text-decoration:none; }
+.form-error { color:#f87171; font-size:0.85rem; margin-bottom:1rem; display:none; }
+.form-success { color:var(--success); font-size:0.85rem; margin-bottom:1rem; display:none; }
+
+@media (max-width:768px) {
+  .hero h1 { font-size:2.2rem; }
+  .features-grid, .pricing-grid, .country-grid { grid-template-columns:1fr; }
+  .steps { grid-template-columns:repeat(2,1fr); }
+  .nav-links a:not(.btn) { display:none; }
+  .social-proof { flex-direction:column; gap:1rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">HireReady</div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#" class="btn btn-outline" onclick="showModal('login')">Log In</a>
+    <a href="#" class="btn btn-primary" onclick="showModal('register')">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="badge">🎯 Built by an immigrant, for job seekers worldwide</div>
+    <h1>Stop Sending Resumes<br>Into the <span class="gradient">Void</span></h1>
+    <p>AI-powered resume builder, ATS optimizer, and interview simulator. Tailored to every job posting, every country, every career stage.</p>
+    <div class="hero-ctas">
+      <a href="#" class="btn btn-primary" onclick="showModal('register')">Build My Resume →</a>
+      <a href="#how" class="btn btn-outline">See How It Works</a>
+    </div>
+    <div class="social-proof">
+      <div><span class="stat-num">85%</span> ATS pass rate</div>
+      <div><span class="stat-num">6+</span> Countries supported</div>
+      <div><span class="stat-num">AI</span> Interview coach</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">Features</div>
+  <h2 class="section-title">Everything You Need to Get Hired</h2>
+  <p class="section-sub">From building your first resume to acing the final interview — we cover the entire journey.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(56,189,248,0.12);">📄</div>
+      <h3>Resume Builder</h3>
+      <p>Create a professional resume from scratch or paste your existing one. Tailored to the job description and country standards.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(129,140,248,0.12);">🎯</div>
+      <h3>ATS Score Analysis</h3>
+      <p>See exactly how your resume scores against automated screening systems. Get missing keywords and specific fixes.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(52,211,153,0.12);">⚡</div>
+      <h3>Smart Optimization</h3>
+      <p>AI rewrites your experience to match job requirements while keeping it authentic. Boost your score from 45% to 85%+.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(251,191,36,0.12);">✉️</div>
+      <h3>Cover Letters</h3>
+      <p>Generate custom cover letters that reference the job posting and your specific experience. No more generic templates.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(248,113,113,0.12);">🎤</div>
+      <h3>Interview Prep</h3>
+      <p>Get likely interview questions based on the actual job description, with recommended answer structures.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:rgba(192,132,252,0.12);">🤖</div>
+      <h3>Interview Simulator</h3>
+      <p>Practice answering questions and get real-time AI feedback on your responses. Build confidence before the real thing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">Process</div>
+  <h2 class="section-title">Four Steps to Your Next Job</h2>
+  <p class="section-sub">Simple workflow that takes you from application to offer.</p>
+  <div class="steps">
+    <div class="step"><h3>Paste Job Posting</h3><p>Copy the job description from LinkedIn, Indeed, or any job board.</p></div>
+    <div class="step"><h3>Build or Upload</h3><p>Create a resume from scratch or upload your existing one.</p></div>
+    <div class="step"><h3>Optimize & Generate</h3><p>Get your ATS score, optimized resume, and custom cover letter.</p></div>
+    <div class="step"><h3>Practice Interview</h3><p>Simulate the real interview with AI-generated questions and feedback.</p></div>
+  </div>
+</section>
+
+<!-- COUNTRY SUPPORT -->
+<section>
+  <div class="section-label">Global</div>
+  <h2 class="section-title">Adapted to Your Target Market</h2>
+  <p class="section-sub">Resume standards differ by country. We format and optimize for where you're applying.</p>
+  <div class="country-grid">
+    <div class="country-card"><div class="flag">🇨🇦</div><h3>Canada</h3><p>1-2 pages, no photo, achievements focus</p></div>
+    <div class="country-card"><div class="flag">🇺🇸</div><h3>United States</h3><p>Results-driven, keyword-optimized</p></div>
+    <div class="country-card"><div class="flag">🇬🇧</div><h3>United Kingdom</h3><p>CV format, personal statement</p></div>
+    <div class="country-card"><div class="flag">🇪🇺</div><h3>Europe</h3><p>Europass standard, photo optional</p></div>
+    <div class="country-card"><div class="flag">🇦🇺</div><h3>Australia</h3><p>Detailed CV, referees included</p></div>
+    <div class="country-card"><div class="flag">🌏</div><h3>Asia</h3><p>Country-specific formatting</p></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-label">Pricing</div>
+  <h2 class="section-title">Simple, Transparent Pricing</h2>
+  <p class="section-sub">No hidden fees. Full access from day one.</p>
+  <div class="price-toggle">
+    <button class="active" onclick="togglePricing('once')">One-Time</button>
+    <button onclick="togglePricing('monthly')">Monthly</button>
+  </div>
+  <div class="pricing-grid" id="pricing-cards">
+    <!-- Filled by JS -->
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <h2>Ready to Land That <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Interview</span>?</h2>
+  <p>Join thousands of job seekers who stopped guessing and started getting callbacks.</p>
+  <a href="#" class="btn btn-primary" onclick="showModal('register')" style="font-size:1.05rem;padding:0.85rem 2.5rem;">Start Building My Resume →</a>
+</div>
+
+<footer>
+  <p>© 2026 HireReady. Built with ❤️ by Marina.</p>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <h2>Welcome Back</h2>
+      <p class="subtitle">Log in to your HireReady account</p>
+      <div class="form-error" id="loginError"></div>
+      <button class="btn btn-google btn-block" onclick="googleLogin()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <div class="form-divider">or</div>
+      <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@email.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••"></div>
+      <button class="btn btn-primary btn-block" onclick="login()">Log In</button>
+      <div class="form-switch">
+        <a href="#" onclick="showModal('forgot')">Forgot password?</a> · 
+        Don't have an account? <a href="#" onclick="showModal('register')">Sign up</a>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerForm" style="display:none">
+      <h2>Create Account</h2>
+      <p class="subtitle">Start building your career today</p>
+      <div class="form-error" id="registerError"></div>
+      <button class="btn btn-google btn-block" onclick="googleLogin()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+        Continue with Google
+      </button>
+      <div class="form-divider">or</div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="Marina Kovalenko"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="you@email.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="At least 8 characters"></div>
+      <button class="btn btn-primary btn-block" onclick="register()">Create Account</button>
+      <div class="form-switch">Already have an account? <a href="#" onclick="showModal('login')">Log in</a></div>
+    </div>
+
+    <!-- FORGOT -->
+    <div id="forgotForm" style="display:none">
+      <h2>Reset Password</h2>
+      <p class="subtitle">We'll send you a reset link</p>
+      <div class="form-error" id="forgotError"></div>
+      <div class="form-success" id="forgotSuccess"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="forgotEmail" placeholder="you@email.com"></div>
+      <button class="btn btn-primary btn-block" onclick="forgotPassword()">Send Reset Link</button>
+      <div class="form-switch"><a href="#" onclick="showModal('login')">← Back to login</a></div>
+    </div>
+
+    <!-- RESET -->
+    <div id="resetForm" style="display:none">
+      <h2>New Password</h2>
+      <p class="subtitle">Enter your new password</p>
+      <div class="form-error" id="resetError"></div>
+      <div class="form-group"><label>New Password</label><input type="password" id="resetPassword" placeholder="At least 8 characters"></div>
+      <div class="form-group"><label>Confirm Password</label><input type="password" id="resetConfirm" placeholder="Confirm password"></div>
+      <button class="btn btn-primary btn-block" onclick="resetPassword()">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+
+// Pricing data
+const pricing = {
+  once: [
+    { name:'Resume', price:'$15', sub:'one-time', features:['Resume optimization','ATS analysis','Cover letter'], cta:'Get Started' },
+    { name:'Pro', price:'$29', sub:'one-time', features:['Resume optimization','ATS analysis','Cover letter','Job description analysis'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$49', sub:'one-time', features:['Everything in Pro','Interview preparation','Interview simulation','Answer coaching'], cta:'Go Premium' }
+  ],
+  monthly: [
+    { name:'Basic', price:'$12', sub:'/month', features:['Create resumes from scratch','Adapt to job descriptions','Keyword optimization','Country formatting','Cover letters'], cta:'Subscribe' },
+    { name:'Pro', price:'$19', sub:'/month', features:['Everything in Basic','ATS score analysis','Improvement recommendations','Multiple resume versions'], cta:'Subscribe', featured:true },
+    { name:'Premium', price:'$29', sub:'/month', features:['Everything in Pro','Interview preparation','Interview simulation','Unlimited optimizations'], cta:'Subscribe' }
+  ]
+};
+
+function togglePricing(type) {
+  document.querySelectorAll('.price-toggle button').forEach((b,i) => {
+    b.classList.toggle('active', (type==='once'&&i===0)||(type==='monthly'&&i===1));
+  });
+  const cards = pricing[type].map(p => `
+    <div class="price-card ${p.featured?'featured':''}">
+      ${p.featured?'<div class="popular-badge">Most Popular</div>':''}
+      <h3>${p.name}</h3>
+      <div class="price">${p.price}<span>${p.sub}</span></div>
+      <ul>${p.features.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <button class="btn ${p.featured?'btn-primary':'btn-outline'} btn-block" onclick="showModal('register')">${p.cta}</button>
+    </div>
+  `).join('');
+  document.getElementById('pricing-cards').innerHTML = cards;
+}
+togglePricing('once');
+
+// Auth
+function showModal(form) {
+  document.getElementById('authModal').classList.add('active');
+  ['loginForm','registerForm','forgotForm','resetForm'].forEach(f => document.getElementById(f).style.display='none');
+  document.querySelectorAll('.form-error,.form-success').forEach(e => e.style.display='none');
+  if (form==='login') document.getElementById('loginForm').style.display='block';
+  else if (form==='register') document.getElementById('registerForm').style.display='block';
+  else if (form==='forgot') document.getElementById('forgotForm').style.display='block';
+  else if (form==='reset') document.getElementById('resetForm').style.display='block';
+}
+function closeModal() { document.getElementById('authModal').classList.remove('active'); }
+document.getElementById('authModal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+
+function showError(id, msg) { const el=document.getElementById(id); el.textContent=msg; el.style.display='block'; }
+
+async function login() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  if (!email||!password) return showError('loginError','Please fill in all fields');
+  try {
+    const r = await fetch(API+'/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email,password}) });
+    const d = await r.json();
+    if (!r.ok) return showError('loginError', d.error);
+    localStorage.setItem('auth_token', d.token);
+    window.location.href = '/dashboard';
+  } catch(e) { showError('loginError','Connection failed'); }
+}
+
+async function register() {
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+  if (!name||!email||!password) return showError('registerError','Please fill in all fields');
+  if (password.length<8) return showError('registerError','Password must be at least 8 characters');
+  try {
+    const r = await fetch(API+'/api/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,email,password}) });
+    const d = await r.json();
+    if (!r.ok) return showError('registerError', d.error);
+    localStorage.setItem('auth_token', d.token);
+    window.location.href = '/dashboard';
+  } catch(e) { showError('registerError','Connection failed'); }
+}
+
+async function forgotPassword() {
+  const email = document.getElementById('forgotEmail').value;
+  if (!email) return showError('forgotError','Please enter your email');
+  try {
+    const r = await fetch(API+'/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email}) });
+    const d = await r.json();
+    const el = document.getElementById('forgotSuccess');
+    el.textContent = 'If an account exists, a reset link has been sent.';
+    el.style.display = 'block';
+  } catch(e) { showError('forgotError','Connection failed'); }
+}
+
+async function resetPassword() {
+  const password = document.getElementById('resetPassword').value;
+  const confirm = document.getElementById('resetConfirm').value;
+  if (password !== confirm) return showError('resetError','Passwords do not match');
+  if (password.length<8) return showError('resetError','Password must be at least 8 characters');
+  const token = new URLSearchParams(window.location.search).get('reset_token');
+  try {
+    const r = await fetch(API+'/api/auth/reset-password', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({token,password}) });
+    const d = await r.json();
+    if (!r.ok) return showError('resetError', d.error);
+    alert('Password reset! You can now log in.');
+    showModal('login');
+  } catch(e) { showError('resetError','Connection failed'); }
+}
+
+function googleLogin() { window.location.href = API+'/api/auth/google'; }
+
+// Handle URL params on load
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('token')) {
+    localStorage.setItem('auth_token', params.get('token'));
+    window.location.href = '/dashboard';
+  }
+  if (params.get('reset_token')) showModal('reset');
+  if (localStorage.getItem('auth_token')) window.location.href = '/dashboard';
+});
+</script>
+</body>
+</html>

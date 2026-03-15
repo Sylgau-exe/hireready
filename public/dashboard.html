@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HireReady — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050a12; --bg2:#0b1120; --bg3:#111827; --card:#141c2e;
+  --border:rgba(255,255,255,0.07); --text:#f1f5f9; --text2:#94a3b8;
+  --accent:#38bdf8; --accent2:#818cf8; --gradient:linear-gradient(135deg,#38bdf8,#818cf8,#c084fc);
+  --glow:rgba(56,189,248,0.25); --success:#34d399; --warn:#fbbf24; --danger:#f87171;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);padding:1.5rem 1rem;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:50;}
+.sidebar .logo{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2rem;padding:0 0.5rem;}
+.nav-item{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1rem;border-radius:10px;cursor:pointer;color:var(--text2);font-size:0.9rem;font-weight:500;transition:all 0.2s;margin-bottom:0.25rem;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.nav-item.active{background:rgba(56,189,248,0.1);color:var(--accent);}
+.nav-item .icon{font-size:1.1rem;width:24px;text-align:center;}
+.sidebar-footer{margin-top:auto;border-top:1px solid var(--border);padding-top:1rem;}
+.user-info{display:flex;align-items:center;gap:0.75rem;padding:0.5rem;font-size:0.85rem;}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;padding:2rem;min-height:100vh;}
+.page-header{margin-bottom:2rem;}
+.page-header h1{font-family:'Fraunces',serif;font-size:1.8rem;margin-bottom:0.25rem;}
+.page-header p{color:var(--text2);font-size:0.95rem;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;}
+.card h3{font-size:1.1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+
+/* FORMS */
+label{display:block;font-size:0.85rem;color:var(--text2);margin-bottom:0.35rem;font-weight:500;}
+input,select,textarea{width:100%;padding:0.7rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;font-family:inherit;resize:vertical;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(56,189,248,0.1);}
+textarea{min-height:120px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.form-group{margin-bottom:1rem;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;transition:all 0.25s;font-family:inherit;}
+.btn-primary{background:var(--gradient);color:#fff;box-shadow:0 4px 20px var(--glow);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--glow);}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid rgba(56,189,248,0.3);}
+.btn-outline:hover{background:rgba(56,189,248,0.1);}
+.btn-sm{padding:0.45rem 1rem;font-size:0.8rem;}
+.btn-danger{background:rgba(248,113,113,0.1);color:var(--danger);border:1px solid rgba(248,113,113,0.2);}
+.btn-block{width:100%;justify-content:center;}
+
+/* TABS */
+.tabs{display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.tab{padding:0.5rem 1.2rem;border-radius:8px;font-size:0.85rem;font-weight:500;cursor:pointer;color:var(--text2);background:transparent;border:1px solid var(--border);transition:all 0.2s;}
+.tab.active{background:rgba(56,189,248,0.1);color:var(--accent);border-color:rgba(56,189,248,0.3);}
+
+/* ATS GAUGE */
+.ats-gauge{text-align:center;padding:2rem;}
+.gauge-circle{width:160px;height:160px;border-radius:50%;margin:0 auto 1rem;position:relative;display:flex;align-items:center;justify-content:center;}
+.gauge-score{font-family:'Fraunces',serif;font-size:3rem;font-weight:700;}
+.gauge-label{color:var(--text2);font-size:0.85rem;}
+
+/* RESULTS */
+.result-section{margin-top:1.5rem;}
+.result-section h4{font-size:0.95rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;}
+.tag{display:inline-block;padding:0.25rem 0.7rem;border-radius:6px;font-size:0.8rem;margin:0.2rem;font-weight:500;}
+.tag-red{background:rgba(248,113,113,0.12);color:var(--danger);}
+.tag-green{background:rgba(52,211,153,0.12);color:var(--success);}
+.tag-blue{background:rgba(56,189,248,0.12);color:var(--accent);}
+.rec-item{padding:0.75rem 1rem;background:var(--bg);border-radius:8px;margin-bottom:0.5rem;font-size:0.9rem;}
+.rec-item strong{color:var(--accent);}
+
+/* INTERVIEW */
+.question-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem;}
+.q-type{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent2);font-weight:600;margin-bottom:0.5rem;}
+.q-text{font-size:1.05rem;line-height:1.6;margin-bottom:1rem;}
+.q-hint{font-size:0.85rem;color:var(--text2);font-style:italic;margin-bottom:1rem;padding:0.75rem;background:rgba(56,189,248,0.05);border-radius:8px;}
+.feedback-card{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.15);border-radius:12px;padding:1.5rem;margin-top:1rem;}
+.score-badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.8rem;border-radius:100px;font-weight:700;font-size:0.85rem;margin-bottom:0.75rem;}
+
+/* COVER LETTER */
+.letter-output{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:2rem;white-space:pre-wrap;line-height:1.8;font-size:0.95rem;}
+
+/* RESUME PREVIEW */
+.resume-preview{background:#fff;color:#1a1a1a;border-radius:12px;padding:2.5rem;font-family:Georgia,serif;line-height:1.6;}
+.resume-preview h2{color:#111;font-size:1.6rem;margin-bottom:0.25rem;font-family:'DM Sans',sans-serif;}
+.resume-preview .contact{color:#666;font-size:0.85rem;margin-bottom:1.5rem;}
+.resume-preview .section-head{color:#2563eb;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #2563eb;padding-bottom:0.25rem;margin:1.5rem 0 0.75rem;font-family:'DM Sans',sans-serif;}
+.resume-preview .exp-title{font-weight:700;font-family:'DM Sans',sans-serif;}
+.resume-preview .exp-company{color:#666;font-size:0.9rem;}
+.resume-preview ul{padding-left:1.2rem;margin:0.5rem 0;}
+.resume-preview li{margin-bottom:0.3rem;font-size:0.9rem;}
+.skill-pills{display:flex;flex-wrap:wrap;gap:0.4rem;}
+.skill-pill{background:#e8f4fd;color:#1e6fa1;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.8rem;font-family:'DM Sans',sans-serif;}
+
+/* LOADING */
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(5,10,18,0.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.loading-overlay.active{display:flex;}
+.loading-text{color:var(--text2);font-size:1rem;}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;}
+.stat-card .stat-num{font-family:'Fraunces',serif;font-size:2rem;line-height:1;}
+.stat-card .stat-label{color:var(--text2);font-size:0.8rem;margin-top:0.25rem;}
+
+.hidden{display:none!important;}
+
+@media(max-width:768px){
+  .sidebar{width:60px;padding:1rem 0.5rem;}
+  .sidebar .logo,.nav-item span,.sidebar-footer .user-info span{display:none;}
+  .nav-item{justify-content:center;padding:0.7rem;}
+  .main{margin-left:60px;padding:1rem;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">HireReady</div>
+  <div class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>Home</span></div>
+  <div class="nav-item" onclick="showPage('builder')"><span class="icon">📄</span><span>Resume Builder</span></div>
+  <div class="nav-item" onclick="showPage('analyzer')"><span class="icon">🎯</span><span>ATS Analyzer</span></div>
+  <div class="nav-item" onclick="showPage('cover')"><span class="icon">✉️</span><span>Cover Letter</span></div>
+  <div class="nav-item" onclick="showPage('interview')"><span class="icon">🎤</span><span>Interview Prep</span></div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span id="userName">Loading...</span>
+    </div>
+    <div class="nav-item" onclick="logout()" style="margin-top:0.5rem;"><span class="icon">🚪</span><span>Log Out</span></div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner" style="width:40px;height:40px;border-width:3px;"></div>
+    <div class="loading-text" id="loadingText">Analyzing your resume with AI...</div>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div id="page-home">
+    <div class="page-header">
+      <h1>👋 Welcome back, <span id="greetName">there</span></h1>
+      <p>Your job preparation command center</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="statResumes">0</div><div class="stat-label">Resumes Created</div></div>
+      <div class="stat-card"><div class="stat-num" id="statAnalyses">0</div><div class="stat-label">ATS Analyses</div></div>
+      <div class="stat-card"><div class="stat-num" id="statInterviews">0</div><div class="stat-label">Interview Sessions</div></div>
+    </div>
+    <div class="card">
+      <h3>🚀 Quick Start</h3>
+      <p style="color:var(--text2);margin-bottom:1rem;">Choose what you need right now:</p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="showPage('builder')">📄 Build a Resume</button>
+        <button class="btn btn-outline" onclick="showPage('analyzer')">🎯 Analyze Resume vs Job</button>
+        <button class="btn btn-outline" onclick="showPage('cover')">✉️ Generate Cover Letter</button>
+        <button class="btn btn-outline" onclick="showPage('interview')">🎤 Practice Interview</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUME BUILDER PAGE -->
+  <div id="page-builder" class="hidden">
+    <div class="page-header">
+      <h1>📄 Resume Builder</h1>
+      <p>Create or optimize your resume for a specific job posting</p>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchBuilderTab('create')">Create from Scratch</div>
+      <div class="tab" onclick="switchBuilderTab('optimize')">Optimize Existing</div>
+    </div>
+
+    <!-- CREATE TAB -->
+    <div id="builder-create">
+      <div class="card">
+        <h3>📋 Paste the Job Description</h3>
+        <div class="form-group"><textarea id="buildJobDesc" placeholder="Paste the full job description from LinkedIn, Indeed, etc..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Target Country</label>
+            <select id="buildCountry">
+              <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+              <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+              <option value="AU">🇦🇺 Australia</option><option value="OTHER">🌏 Other</option>
+            </select>
+          </div>
+          <div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>👤 Your Information</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name</label><input type="text" id="buildName" placeholder="Marina Kovalenko"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="buildEmail" placeholder="marina@email.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Phone</label><input type="text" id="buildPhone" placeholder="+1 514-555-0123"></div>
+          <div class="form-group"><label>Location</label><input type="text" id="buildLocation" placeholder="Montreal, QC, Canada"></div>
+        </div>
+        <div class="form-group"><label>LinkedIn URL (optional)</label><input type="text" id="buildLinkedin" placeholder="linkedin.com/in/yourprofile"></div>
+        <div class="form-group"><label>Work Experience (describe your previous roles, achievements, and responsibilities)</label>
+          <textarea id="buildExperience" style="min-height:180px;" placeholder="Example:&#10;Marketing Coordinator at TechCorp (2021-2023)&#10;- Managed social media accounts, grew followers by 40%&#10;- Coordinated email campaigns with 25% open rate&#10;&#10;Sales Associate at RetailCo (2019-2021)&#10;- Top performer Q3 2020, exceeded targets by 30%"></textarea>
+        </div>
+        <div class="form-group"><label>Education</label>
+          <textarea id="buildEducation" placeholder="Bachelor of Commerce, McGill University, 2019&#10;Digital Marketing Certificate, Google, 2021"></textarea>
+        </div>
+        <div class="form-group"><label>Skills (comma-separated)</label>
+          <input type="text" id="buildSkills" placeholder="Project management, Excel, Salesforce, French, English">
+        </div>
+        <button class="btn btn-primary" onclick="generateResume('create')">✨ Generate My Resume</button>
+      </div>
+    </div>
+
+    <!-- OPTIMIZE TAB -->
+    <div id="builder-optimize" class="hidden">
+      <div class="card">
+        <h3>📋 Paste the Job Description</h3>
+        <div class="form-group"><textarea id="optJobDesc" placeholder="Paste the full job description..."></textarea></div>
+        <div class="form-group"><label>Target Country</label>
+          <select id="optCountry">
+            <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+            <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+            <option value="AU">🇦🇺 Australia</option><option value="OTHER">🌏 Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📄 Paste Your Current Resume</h3>
+        <div class="form-group"><textarea id="optResume" style="min-height:250px;" placeholder="Paste the text of your existing resume here..."></textarea></div>
+        <button class="btn btn-primary" onclick="generateResume('optimize')">⚡ Optimize My Resume</button>
+      </div>
+    </div>
+
+    <!-- RESUME RESULT -->
+    <div id="resumeResult" class="hidden">
+      <div class="card">
+        <h3>✅ Your Resume</h3>
+        <div style="display:flex;gap:1rem;margin-bottom:1rem;">
+          <button class="btn btn-outline btn-sm" onclick="copyResumeText()">📋 Copy Text</button>
+          <button class="btn btn-outline btn-sm" onclick="printResume()">🖨️ Print / Save PDF</button>
+        </div>
+        <div id="resumePreview" class="resume-preview"></div>
+      </div>
+      <div id="resumeImprovements" class="card hidden">
+        <h3>📝 What Changed</h3>
+        <div id="improvementsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATS ANALYZER PAGE -->
+  <div id="page-analyzer" class="hidden">
+    <div class="page-header">
+      <h1>🎯 ATS Score Analyzer</h1>
+      <p>See how your resume matches a specific job posting</p>
+    </div>
+    <div class="card">
+      <div class="form-group"><label>Paste Your Resume</label>
+        <textarea id="atsResume" style="min-height:200px;" placeholder="Paste the text of your resume..."></textarea>
+      </div>
+      <div class="form-group"><label>Paste the Job Description</label>
+        <textarea id="atsJobDesc" style="min-height:200px;" placeholder="Paste the full job description..."></textarea>
+      </div>
+      <div class="form-group"><label>Target Country</label>
+        <select id="atsCountry">
+          <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+          <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+          <option value="AU">🇦🇺 Australia</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="analyzeResume()">🔍 Analyze My Resume</button>
+    </div>
+
+    <div id="atsResult" class="hidden">
+      <div class="card">
+        <div class="ats-gauge">
+          <div class="gauge-circle" id="gaugeCircle">
+            <span class="gauge-score" id="gaugeScore">0%</span>
+          </div>
+          <div class="gauge-label">ATS Compatibility Score</div>
+          <p id="atsSummary" style="color:var(--text2);margin-top:0.75rem;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.6;"></p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div class="card">
+          <h3>❌ Missing Keywords</h3>
+          <div id="missingKeywords"></div>
+        </div>
+        <div class="card">
+          <h3>❌ Missing Skills</h3>
+          <div id="missingSkills"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>✅ Strong Points</h3>
+        <div id="strongPoints"></div>
+      </div>
+
+      <div class="card">
+        <h3>💡 Recommendations</h3>
+        <div id="recommendations"></div>
+      </div>
+
+      <div class="card">
+        <h3>🌍 Country Tips</h3>
+        <div id="countryTips"></div>
+      </div>
+
+      <div style="text-align:center;margin-top:1rem;">
+        <button class="btn btn-primary" onclick="autoOptimize()">⚡ Auto-Optimize This Resume</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COVER LETTER PAGE -->
+  <div id="page-cover" class="hidden">
+    <div class="page-header">
+      <h1>✉️ Cover Letter Generator</h1>
+      <p>Create a custom cover letter for any position</p>
+    </div>
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group"><label>Company Name</label><input type="text" id="coverCompany" placeholder="Shopify"></div>
+        <div class="form-group"><label>Target Country</label>
+          <select id="coverCountry">
+            <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+            <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Job Description</label>
+        <textarea id="coverJobDesc" placeholder="Paste the job description..."></textarea>
+      </div>
+      <div class="form-group"><label>Your Resume (optional — helps make it more personal)</label>
+        <textarea id="coverResume" placeholder="Paste your resume text..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="generateCoverLetter()">✨ Generate Cover Letter</button>
+    </div>
+
+    <div id="coverResult" class="hidden">
+      <div class="card">
+        <h3>✅ Your Cover Letter</h3>
+        <button class="btn btn-outline btn-sm" onclick="copyCoverLetter()" style="margin-bottom:1rem;">📋 Copy to Clipboard</button>
+        <div id="coverLetterOutput" class="letter-output"></div>
+      </div>
+      <div class="card">
+        <h3>💡 Key Highlights Used</h3>
+        <div id="coverHighlights"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERVIEW PREP PAGE -->
+  <div id="page-interview" class="hidden">
+    <div class="page-header">
+      <h1>🎤 Interview Preparation</h1>
+      <p>Practice with AI-generated interview questions and get real-time feedback</p>
+    </div>
+
+    <!-- START FORM -->
+    <div id="interviewSetup">
+      <div class="card">
+        <h3>🎯 Set Up Your Practice Session</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Job Title</label><input type="text" id="intJobTitle" placeholder="Marketing Manager"></div>
+          <div class="form-group"><label>Number of Questions</label>
+            <select id="intCount">
+              <option value="5">5 questions</option><option value="8" selected>8 questions</option>
+              <option value="10">10 questions</option><option value="12">12 questions</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Job Description</label>
+          <textarea id="intJobDesc" placeholder="Paste the job description..."></textarea>
+        </div>
+        <div class="form-group"><label>Target Country</label>
+          <select id="intCountry">
+            <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+            <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="startInterview()">🚀 Start Practice Interview</button>
+      </div>
+    </div>
+
+    <!-- INTERVIEW SESSION -->
+    <div id="interviewSession" class="hidden">
+      <div class="card" style="background:rgba(56,189,248,0.05);border-color:rgba(56,189,248,0.15);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <span style="color:var(--accent);font-weight:600;">Interview Simulation</span>
+            <span id="intProgress" style="color:var(--text2);margin-left:1rem;">Question 1 of 8</span>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="endInterview()">End Session</button>
+        </div>
+      </div>
+
+      <div id="questionsContainer"></div>
+
+      <div id="interviewSummary" class="hidden">
+        <div class="card">
+          <h3>📊 Session Summary</h3>
+          <div class="ats-gauge">
+            <div class="gauge-circle" id="intGaugeCircle">
+              <span class="gauge-score" id="intAvgScore">0</span>
+            </div>
+            <div class="gauge-label">Average Score (out of 10)</div>
+          </div>
+          <div id="summaryDetails"></div>
+          <div style="text-align:center;margin-top:1rem;">
+            <button class="btn btn-primary" onclick="showPage('interview');resetInterview();">Practice Again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = '';
+const TOKEN = () => localStorage.getItem('auth_token');
+const headers = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN()}` });
+
+// Auth check
+if (!TOKEN()) window.location.href = '/';
+
+// State
+let currentUser = null;
+let interviewData = null;
+let currentQuestion = 0;
+let scores = [];
+
+// Load user
+async function loadUser() {
+  try {
+    const r = await fetch(API+'/api/auth/me', { headers: headers() });
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    currentUser = d.user;
+    document.getElementById('greetName').textContent = currentUser.name?.split(' ')[0] || 'there';
+    document.getElementById('userName').textContent = currentUser.name || currentUser.email;
+    document.getElementById('userAvatar').textContent = (currentUser.name||'?')[0].toUpperCase();
+    document.getElementById('statResumes').textContent = currentUser.stats?.resumes || 0;
+    document.getElementById('statAnalyses').textContent = currentUser.stats?.analyses || 0;
+    document.getElementById('statInterviews').textContent = currentUser.stats?.interviews || 0;
+  } catch(e) {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/';
+  }
+}
+loadUser();
+
+function logout() { localStorage.removeItem('auth_token'); window.location.href = '/'; }
+
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('active'); }
+
+// Navigation
+function showPage(page) {
+  document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-'+page).classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach((n,i) => {
+    const pages = ['home','builder','analyzer','cover','interview'];
+    n.classList.toggle('active', pages[i]===page);
+  });
+}
+
+function switchBuilderTab(tab) {
+  document.querySelectorAll('.tabs .tab').forEach((t,i) => t.classList.toggle('active', (tab==='create'&&i===0)||(tab==='optimize'&&i===1)));
+  document.getElementById('builder-create').classList.toggle('hidden', tab!=='create');
+  document.getElementById('builder-optimize').classList.toggle('hidden', tab!=='optimize');
+  document.getElementById('resumeResult').classList.add('hidden');
+}
+
+// ============ RESUME BUILDER ============
+async function generateResume(mode) {
+  let body;
+  if (mode === 'create') {
+    const jd = document.getElementById('buildJobDesc').value;
+    if (!jd) return alert('Please paste the job description');
+    body = {
+      mode: 'create',
+      jobDescription: jd,
+      targetCountry: document.getElementById('buildCountry').value,
+      personalInfo: {
+        name: document.getElementById('buildName').value,
+        email: document.getElementById('buildEmail').value,
+        phone: document.getElementById('buildPhone').value,
+        location: document.getElementById('buildLocation').value,
+        linkedin: document.getElementById('buildLinkedin').value,
+        experience: document.getElementById('buildExperience').value,
+        education: document.getElementById('buildEducation').value,
+        skills: document.getElementById('buildSkills').value
+      }
+    };
+  } else {
+    const jd = document.getElementById('optJobDesc').value;
+    const resume = document.getElementById('optResume').value;
+    if (!jd || !resume) return alert('Please paste both the job description and your resume');
+    body = {
+      mode: 'optimize',
+      jobDescription: jd,
+      targetCountry: document.getElementById('optCountry').value,
+      existingResume: resume
+    };
+  }
+
+  showLoading('AI is building your resume...');
+  try {
+    const r = await fetch(API+'/api/resume/generate', { method:'POST', headers:headers(), body:JSON.stringify(body) });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok) return alert(d.error || 'Failed to generate resume');
+    renderResume(d.resume);
+    if (d.resume.improvements) {
+      document.getElementById('resumeImprovements').classList.remove('hidden');
+      document.getElementById('improvementsList').innerHTML = d.resume.improvements.map(i => `<div class="rec-item">✏️ ${i}</div>`).join('');
+    }
+  } catch(e) { hideLoading(); alert('Connection failed'); }
+}
+
+function renderResume(r) {
+  document.getElementById('resumeResult').classList.remove('hidden');
+  const expHtml = (r.experience||[]).map(e => `
+    <div style="margin-bottom:1rem;">
+      <div class="exp-title">${e.title}</div>
+      <div class="exp-company">${e.company} · ${e.location || ''} · ${e.startDate} – ${e.endDate}</div>
+      <ul>${(e.bullets||[]).map(b => `<li>${b}</li>`).join('')}</ul>
+    </div>
+  `).join('');
+  const eduHtml = (r.education||[]).map(e => `<div><strong>${e.degree}</strong> — ${e.school} (${e.year}) ${e.details?'· '+e.details:''}</div>`).join('');
+  const skillsHtml = (r.skills||[]).map(s => `<span class="skill-pill">${s}</span>`).join('');
+  const langsHtml = (r.languages||[]).length ? `<div class="section-head">Languages</div><p>${r.languages.join(' · ')}</p>` : '';
+  const certsHtml = (r.certifications||[]).length ? `<div class="section-head">Certifications</div><p>${r.certifications.join(' · ')}</p>` : '';
+
+  document.getElementById('resumePreview').innerHTML = `
+    <h2>${r.fullName || ''}</h2>
+    <div class="contact">${[r.email,r.phone,r.location,r.linkedinUrl].filter(Boolean).join(' · ')}</div>
+    <div class="section-head">Professional Summary</div>
+    <p>${r.summary || ''}</p>
+    <div class="section-head">Experience</div>
+    ${expHtml}
+    <div class="section-head">Education</div>
+    ${eduHtml}
+    <div class="section-head">Skills</div>
+    <div class="skill-pills">${skillsHtml}</div>
+    ${certsHtml}
+    ${langsHtml}
+  `;
+  window._lastResume = r;
+  document.getElementById('resumeResult').scrollIntoView({ behavior:'smooth' });
+}
+
+function copyResumeText() {
+  const el = document.getElementById('resumePreview');
+  navigator.clipboard.writeText(el.innerText).then(() => alert('Resume copied to clipboard!'));
+}
+function printResume() {
+  const w = window.open('','','width=800,height=1100');
+  w.document.write('<html><head><title>Resume</title><style>body{font-family:Georgia,serif;padding:2rem;line-height:1.6;color:#1a1a1a;}h2{margin-bottom:0.25rem;}.contact{color:#666;font-size:0.85rem;margin-bottom:1.5rem;}.section-head{color:#2563eb;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #2563eb;padding-bottom:0.25rem;margin:1.5rem 0 0.75rem;}.exp-title{font-weight:700;}.exp-company{color:#666;font-size:0.9rem;}ul{padding-left:1.2rem;margin:0.5rem 0;}li{margin-bottom:0.3rem;font-size:0.9rem;}.skill-pills{display:flex;flex-wrap:wrap;gap:0.4rem;}.skill-pill{background:#e8f4fd;color:#1e6fa1;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.8rem;}</style></head><body>');
+  w.document.write(document.getElementById('resumePreview').innerHTML);
+  w.document.write('</body></html>');
+  w.document.close();
+  w.print();
+}
+
+// ============ ATS ANALYZER ============
+async function analyzeResume() {
+  const resume = document.getElementById('atsResume').value;
+  const jd = document.getElementById('atsJobDesc').value;
+  if (!resume || !jd) return alert('Please paste both your resume and the job description');
+
+  showLoading('AI is analyzing your resume against the job posting...');
+  try {
+    const r = await fetch(API+'/api/resume/analyze', {
+      method:'POST', headers:headers(),
+      body:JSON.stringify({ resumeText:resume, jobDescription:jd, targetCountry:document.getElementById('atsCountry').value })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok) return alert(d.error||'Analysis failed');
+    renderAtsResult(d.analysis);
+  } catch(e) { hideLoading(); alert('Connection failed'); }
+}
+
+function renderAtsResult(a) {
+  document.getElementById('atsResult').classList.remove('hidden');
+  const score = a.atsScore;
+  const color = score >= 70 ? 'var(--success)' : score >= 50 ? 'var(--warn)' : 'var(--danger)';
+  document.getElementById('gaugeCircle').style.background = `conic-gradient(${color} ${score*3.6}deg, var(--bg) 0)`;
+  document.getElementById('gaugeScore').textContent = score + '%';
+  document.getElementById('gaugeScore').style.color = color;
+  document.getElementById('atsSummary').textContent = a.summary || '';
+
+  document.getElementById('missingKeywords').innerHTML = (a.missingKeywords||[]).map(k => `<span class="tag tag-red">${k}</span>`).join('') || '<span style="color:var(--text2)">None — great match!</span>';
+  document.getElementById('missingSkills').innerHTML = (a.missingSkills||[]).map(s => `<span class="tag tag-red">${s}</span>`).join('') || '<span style="color:var(--text2)">None — well aligned!</span>';
+  document.getElementById('strongPoints').innerHTML = (a.strongPoints||[]).map(p => `<span class="tag tag-green">${p}</span>`).join('');
+  document.getElementById('recommendations').innerHTML = (a.recommendations||[]).map(r => `<div class="rec-item"><strong>${r.category}:</strong> ${r.suggestion}</div>`).join('');
+  document.getElementById('countryTips').innerHTML = (a.countryTips||[]).map(t => `<div class="rec-item">🌍 ${t}</div>`).join('');
+
+  document.getElementById('atsResult').scrollIntoView({ behavior:'smooth' });
+}
+
+function autoOptimize() {
+  const resume = document.getElementById('atsResume').value;
+  const jd = document.getElementById('atsJobDesc').value;
+  showPage('builder');
+  switchBuilderTab('optimize');
+  document.getElementById('optResume').value = resume;
+  document.getElementById('optJobDesc').value = jd;
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// ============ COVER LETTER ============
+async function generateCoverLetter() {
+  const jd = document.getElementById('coverJobDesc').value;
+  if (!jd) return alert('Please paste the job description');
+
+  showLoading('AI is crafting your cover letter...');
+  try {
+    const r = await fetch(API+'/api/cover-letter/generate', {
+      method:'POST', headers:headers(),
+      body:JSON.stringify({
+        jobDescription:jd,
+        companyName:document.getElementById('coverCompany').value,
+        resumeText:document.getElementById('coverResume').value,
+        targetCountry:document.getElementById('coverCountry').value
+      })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok) return alert(d.error||'Generation failed');
+    document.getElementById('coverResult').classList.remove('hidden');
+    document.getElementById('coverLetterOutput').textContent = d.coverLetter;
+    document.getElementById('coverHighlights').innerHTML = (d.highlights||[]).map(h => `<span class="tag tag-blue">${h}</span>`).join('');
+    document.getElementById('coverResult').scrollIntoView({ behavior:'smooth' });
+  } catch(e) { hideLoading(); alert('Connection failed'); }
+}
+
+function copyCoverLetter() {
+  navigator.clipboard.writeText(document.getElementById('coverLetterOutput').textContent).then(() => alert('Cover letter copied!'));
+}
+
+// ============ INTERVIEW ============
+async function startInterview() {
+  const jd = document.getElementById('intJobDesc').value;
+  if (!jd) return alert('Please paste the job description');
+
+  showLoading('AI is preparing your interview questions...');
+  try {
+    const r = await fetch(API+'/api/interview/start', {
+      method:'POST', headers:headers(),
+      body:JSON.stringify({
+        jobDescription:jd,
+        jobTitle:document.getElementById('intJobTitle').value,
+        questionCount:parseInt(document.getElementById('intCount').value),
+        targetCountry:document.getElementById('intCountry').value
+      })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok) return alert(d.error||'Failed to start');
+
+    interviewData = d;
+    currentQuestion = 0;
+    scores = [];
+    document.getElementById('interviewSetup').classList.add('hidden');
+    document.getElementById('interviewSession').classList.remove('hidden');
+    document.getElementById('interviewSummary').classList.add('hidden');
+    renderQuestion(0);
+  } catch(e) { hideLoading(); alert('Connection failed'); }
+}
+
+function renderQuestion(idx) {
+  const q = interviewData.questions[idx];
+  if (!q) return showInterviewSummary();
+  
+  document.getElementById('intProgress').textContent = `Question ${idx+1} of ${interviewData.questions.length}`;
+  document.getElementById('questionsContainer').innerHTML = `
+    <div class="question-card">
+      <div class="q-type">${q.type} Question</div>
+      <div class="q-text">${q.question}</div>
+      <div class="q-hint">💡 Hint: ${q.hint}</div>
+      <div class="form-group">
+        <label>Your Answer</label>
+        <textarea id="userAnswer" style="min-height:150px;" placeholder="Type your answer here... Take your time, think about structure and specific examples."></textarea>
+      </div>
+      <div style="display:flex;gap:1rem;">
+        <button class="btn btn-primary" onclick="submitAnswer(${idx})">Submit Answer</button>
+        <button class="btn btn-outline" onclick="skipQuestion(${idx})">Skip</button>
+      </div>
+      <div id="feedbackArea"></div>
+    </div>
+  `;
+}
+
+async function submitAnswer(idx) {
+  const answer = document.getElementById('userAnswer').value;
+  if (!answer.trim()) return alert('Please type your answer');
+  const q = interviewData.questions[idx];
+
+  showLoading('AI is evaluating your answer...');
+  try {
+    const r = await fetch(API+'/api/interview/evaluate', {
+      method:'POST', headers:headers(),
+      body:JSON.stringify({
+        sessionId: interviewData.sessionId,
+        questionNumber: q.number,
+        question: q.question,
+        questionType: q.type,
+        userAnswer: answer,
+        jobTitle: document.getElementById('intJobTitle').value
+      })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok) return alert(d.error||'Evaluation failed');
+
+    scores.push(d.evaluation.score);
+    const ev = d.evaluation;
+    const scoreColor = ev.score >= 7 ? 'var(--success)' : ev.score >= 5 ? 'var(--warn)' : 'var(--danger)';
+
+    document.getElementById('feedbackArea').innerHTML = `
+      <div class="feedback-card">
+        <div class="score-badge" style="background:${scoreColor}22;color:${scoreColor};border:1px solid ${scoreColor}44;">
+          Score: ${ev.score}/10
+        </div>
+        <p style="margin-bottom:0.75rem;">${ev.feedback}</p>
+        <div style="margin-bottom:0.5rem;"><strong style="color:var(--success);">Strengths:</strong> ${(ev.strengths||[]).join(', ')}</div>
+        <div style="margin-bottom:0.75rem;"><strong style="color:var(--warn);">To Improve:</strong> ${(ev.improvements||[]).join(', ')}</div>
+        <div style="background:var(--bg);padding:1rem;border-radius:8px;margin-top:0.75rem;">
+          <strong>💡 Suggested Stronger Answer:</strong>
+          <p style="margin-top:0.5rem;color:var(--text2);line-height:1.6;">${ev.suggestedAnswer}</p>
+        </div>
+        <p style="margin-top:0.75rem;font-style:italic;color:var(--accent);">Tip: ${ev.tip}</p>
+        <button class="btn btn-primary" style="margin-top:1rem;" onclick="nextQuestion(${idx})">
+          ${idx < interviewData.questions.length - 1 ? 'Next Question →' : 'See Summary →'}
+        </button>
+      </div>
+    `;
+    document.getElementById('feedbackArea').scrollIntoView({ behavior:'smooth' });
+  } catch(e) { hideLoading(); alert('Connection failed'); }
+}
+
+function skipQuestion(idx) {
+  scores.push(0);
+  nextQuestion(idx);
+}
+
+function nextQuestion(idx) {
+  currentQuestion = idx + 1;
+  if (currentQuestion >= interviewData.questions.length) {
+    showInterviewSummary();
+  } else {
+    renderQuestion(currentQuestion);
+    window.scrollTo({ top:0, behavior:'smooth' });
+  }
+}
+
+function showInterviewSummary() {
+  document.getElementById('questionsContainer').innerHTML = '';
+  document.getElementById('interviewSummary').classList.remove('hidden');
+  const validScores = scores.filter(s => s > 0);
+  const avg = validScores.length ? (validScores.reduce((a,b)=>a+b,0)/validScores.length).toFixed(1) : 0;
+  const color = avg >= 7 ? 'var(--success)' : avg >= 5 ? 'var(--warn)' : 'var(--danger)';
+  document.getElementById('intGaugeCircle').style.background = `conic-gradient(${color} ${avg*36}deg, var(--bg) 0)`;
+  document.getElementById('intAvgScore').textContent = avg;
+  document.getElementById('intAvgScore').style.color = color;
+
+  let summary = `<div style="text-align:center;margin-top:1rem;color:var(--text2);">`;
+  summary += `You answered ${validScores.length} of ${interviewData.questions.length} questions. `;
+  if (avg >= 8) summary += 'Outstanding performance! You\'re very well prepared. 🌟';
+  else if (avg >= 6) summary += 'Good job! A few areas to polish and you\'ll be interview-ready. 💪';
+  else summary += 'Great practice session! Review the suggested answers to strengthen your responses. 📚';
+  summary += '</div>';
+  document.getElementById('summaryDetails').innerHTML = summary;
+}
+
+function endInterview() {
+  if (confirm('End this interview session?')) {
+    showInterviewSummary();
+  }
+}
+
+function resetInterview() {
+  document.getElementById('interviewSetup').classList.remove('hidden');
+  document.getElementById('interviewSession').classList.add('hidden');
+  interviewData = null; currentQuestion = 0; scores = [];
+}
+</script>
+</body>
+</html>

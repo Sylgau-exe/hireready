@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/public/dashboard.html" },
+    { "source": "/admin", "destination": "/public/admin.html" },
+    { "source": "/((?!api/).*)", "destination": "/public/$1" }
+  ]
+}
