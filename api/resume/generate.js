@@ -13,14 +13,56 @@ export default async function handler(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
   const { mode, jobDescription, targetCountry, personalInfo, existingResume } = req.body;
-  // mode: 'create' (from scratch) or 'optimize' (existing resume)
+  // mode: 'generic' (free, no JD), 'create' (from scratch with JD), or 'optimize' (existing resume with JD)
 
-  if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
+  if (mode !== 'generic' && !jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
   try {
     let prompt;
 
-    if (mode === 'optimize' && existingResume) {
+    if (mode === 'generic') {
+      // FREE TIER: Generic resume, no job description needed
+      prompt = `You are an expert resume writer. Create a polished, professional resume from the information provided.
+
+TARGET COUNTRY: ${targetCountry || 'Canada'}
+
+PERSONAL INFORMATION:
+${JSON.stringify(personalInfo, null, 2)}
+
+Return the resume in this exact JSON format (no markdown, no backticks):
+{
+  "fullName": "${personalInfo?.name || ''}",
+  "email": "${personalInfo?.email || ''}",
+  "phone": "${personalInfo?.phone || ''}",
+  "location": "${personalInfo?.location || ''}",
+  "linkedinUrl": "${personalInfo?.linkedin || ''}",
+  "summary": "Strong professional summary (3-4 sentences)",
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "location": "City, Country",
+      "startDate": "Mon YYYY",
+      "endDate": "Mon YYYY or Present",
+      "bullets": ["Achievement-focused bullet with metrics", "bullet 2", "bullet 3"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree Name",
+      "school": "School Name",
+      "year": "YYYY",
+      "details": ""
+    }
+  ],
+  "skills": ["skill1", "skill2"],
+  "certifications": [],
+  "languages": [],
+  "tips": ["Tip to improve this resume further"]
+}
+
+Follow resume standards for ${targetCountry || 'Canada'}. Use the person's real experience and present it in the best possible way. Use strong action verbs and quantify achievements where possible.`;
+    } else if (mode === 'optimize' && existingResume) {
       prompt = `You are an expert resume writer and ATS optimization specialist.
 
 TASK: Optimize the following resume to match the job description. Keep the person's real experience but reword, restructure, and add relevant keywords to maximize ATS compatibility.
