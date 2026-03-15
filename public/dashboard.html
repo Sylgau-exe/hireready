@@ -1893,9 +1893,9 @@ function renderDocs() {
       : '<span class="tier-badge tier-pro" style="position:static;">PRO</span>';
     const scoreHtml = doc.score ? `<span style="color:${doc.score>=70?'var(--success)':doc.score>=50?'var(--warn)':'var(--danger)'};font-weight:700;font-size:0.9rem;">${doc.score}%</span>` : '';
 
-    return `<div class="card" style="cursor:pointer;transition:all 0.2s;" onclick="viewDocument('${doc.id}')" onmouseover="this.style.borderColor='rgba(56,189,248,0.3)'" onmouseout="this.style.borderColor=''">
+    return `<div class="card" style="cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(56,189,248,0.3)'" onmouseout="this.style.borderColor=''">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:1rem;flex:1;" onclick="viewDocument('${doc.id}')">
           <div style="font-size:1.8rem;">${doc.icon}</div>
           <div>
             <div style="font-weight:600;display:flex;align-items:center;gap:0.5rem;">
@@ -1906,13 +1906,37 @@ function renderDocs() {
             </div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
           ${scoreHtml}
-          <span style="color:var(--text2);font-size:1.2rem;">→</span>
+          <button onclick="event.stopPropagation();deleteDocument('${doc.id}','${doc.source}','${doc.title.replace(/'/g,'')}')" style="background:rgba(248,113,113,0.1);border:none;color:var(--danger);cursor:pointer;padding:0.4rem 0.5rem;border-radius:6px;font-size:0.8rem;transition:all 0.2s;" onmouseover="this.style.background='rgba(248,113,113,0.25)'" onmouseout="this.style.background='rgba(248,113,113,0.1)'">🗑️</button>
+          <span style="color:var(--text2);font-size:1.2rem;" onclick="viewDocument('${doc.id}')">→</span>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+async function deleteDocument(docId, source, title) {
+  if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
+  
+  // Extract raw numeric ID from prefixed id (r-123, cl-123, ats-123)
+  const rawId = parseInt(docId.replace(/^(r-|cl-|ats-)/, ''));
+  if (!rawId) return alert('Invalid document ID');
+
+  try {
+    const r = await fetch(API+'/api/documents/delete', {
+      method: 'DELETE', headers: headers(),
+      body: JSON.stringify({ docId: rawId, source })
+    });
+    const d = await r.json();
+    if (!r.ok) return alert(d.error || 'Failed to delete');
+    
+    // Remove from local array and re-render
+    allDocs = allDocs.filter(d => String(d.id) !== String(docId));
+    renderDocs();
+  } catch(e) {
+    alert('Failed to delete document');
+  }
 }
 
 function viewDocument(docId) {
