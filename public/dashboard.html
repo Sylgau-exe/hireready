@@ -758,9 +758,8 @@ function showPage(page) {
 let selectedResumeText = '';
 
 function switchResumeSource(source) {
-  document.querySelectorAll('#page-tailor .card:has(#resumeSource-saved) .input-method button').forEach((b,i) => {
-    b.classList.toggle('active', (source==='saved'&&i===0)||(source==='paste'&&i===1));
-  });
+  const btns = document.getElementById('resumeSource-saved').parentElement.querySelectorAll('.input-method button');
+  btns.forEach((b,i) => b.classList.toggle('active', (source==='saved'&&i===0)||(source==='paste'&&i===1)));
   document.getElementById('resumeSource-saved').classList.toggle('hidden', source!=='saved');
   document.getElementById('resumeSource-paste').classList.toggle('hidden', source!=='paste');
 }
@@ -821,7 +820,8 @@ function selectSavedResume(id) {
 
 function getSelectedResumeText() {
   // Check if using saved resume
-  if (!document.getElementById('resumeSource-saved').classList.contains('hidden') && selectedResumeText) {
+  const savedPanel = document.getElementById('resumeSource-saved');
+  if (savedPanel && !savedPanel.classList.contains('hidden') && selectedResumeText) {
     const res = (window._savedResumesData || []).find(r => String(r.id) === selectedResumeText);
     if (res) {
       // Build text from stored resume data
@@ -830,28 +830,44 @@ function getSelectedResumeText() {
       if (res.email) text += res.email + '\n';
       if (res.phone) text += res.phone + '\n';
       if (res.location) text += res.location + '\n';
-      if (res.summary) text += '\n' + res.summary + '\n';
-      if (res.experience?.length) {
+      if (res.linkedin_url) text += res.linkedin_url + '\n';
+      if (res.summary) text += '\nPROFESSIONAL SUMMARY\n' + res.summary + '\n';
+      
+      const exp = typeof res.experience === 'string' ? JSON.parse(res.experience) : (res.experience || []);
+      if (exp.length) {
         text += '\nEXPERIENCE\n';
-        res.experience.forEach(e => {
+        exp.forEach(e => {
           if (typeof e === 'string') { text += e + '\n'; }
-          else { text += `${e.title||''}, ${e.company||''}, ${e.location||''}, ${e.startDate||e.start_date||''} – ${e.endDate||e.end_date||''}\n${(e.bullets||[]).map(b=>'- '+b).join('\n')}\n\n`; }
+          else {
+            text += `${e.title||''}, ${e.company||''}, ${e.location||''}, ${e.startDate||e.start_date||''} – ${e.endDate||e.end_date||'Present'}\n`;
+            (e.bullets||[]).forEach(b => text += '- ' + b + '\n');
+            text += '\n';
+          }
         });
       }
-      if (res.education?.length) {
+      
+      const edu = typeof res.education === 'string' ? JSON.parse(res.education) : (res.education || []);
+      if (edu.length) {
         text += '\nEDUCATION\n';
-        res.education.forEach(e => {
+        edu.forEach(e => {
           if (typeof e === 'string') { text += e + '\n'; }
           else { text += `${e.degree||''}, ${e.school||''}, ${e.year||''}\n`; }
         });
       }
-      if (res.skills?.length) text += '\nSKILLS\n' + res.skills.join(', ') + '\n';
-      if (res.languages?.length) text += '\nLANGUAGES\n' + res.languages.join(', ') + '\n';
+      
+      const skills = typeof res.skills === 'string' ? JSON.parse(res.skills) : (res.skills || []);
+      if (skills.length) text += '\nSKILLS\n' + skills.join(', ') + '\n';
+      
+      const langs = typeof res.languages === 'string' ? JSON.parse(res.languages) : (res.languages || []);
+      if (langs.length) text += '\nLANGUAGES\n' + langs.join(', ') + '\n';
+      
+      console.log('Resume text built from saved data, length:', text.length);
       return text;
     }
   }
   // Fallback to pasted text or in-memory
-  return document.getElementById('tailorResume').value || savedResumeText;
+  const pasted = document.getElementById('tailorResume')?.value || '';
+  return pasted || savedResumeText;
 }
 
 function upgradeTo(plan) {
