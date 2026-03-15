@@ -1054,25 +1054,28 @@ async function loadDocuments() {
 
     allDocs = [];
 
-    // Process resumes
+    // Process resumes (from resumes table — always render as resume)
     (d.resumes || []).forEach(doc => {
+      const isOptimized = doc.title?.toLowerCase().includes('optimized');
       allDocs.push({
-        id: doc.id,
-        type: doc.title?.toLowerCase().includes('optimized') ? 'tailored' : 'resume',
+        id: 'r-' + doc.id,
+        source: 'resume',
+        type: isOptimized ? 'tailored' : 'resume',
         title: doc.title || 'Resume',
         subtitle: doc.full_name || '',
         country: doc.target_country || 'CA',
         date: doc.created_at,
-        icon: doc.title?.toLowerCase().includes('optimized') ? '🎯' : '📄',
+        icon: isOptimized ? '🎯' : '📄',
         data: doc
       });
     });
 
-    // Process analyses (cover letters + tailored analyses)
+    // Process analyses (from ats_analyses table)
     (d.analyses || []).forEach(doc => {
       if (doc.cover_letter) {
         allDocs.push({
           id: 'cl-' + doc.id,
+          source: 'analysis',
           type: 'cover',
           title: doc.company_name ? `Cover Letter — ${doc.company_name}` : 'Cover Letter',
           subtitle: doc.job_title || '',
@@ -1085,12 +1088,13 @@ async function loadDocuments() {
       if (doc.ats_score > 0) {
         allDocs.push({
           id: 'ats-' + doc.id,
+          source: 'analysis',
           type: 'tailored',
           title: doc.company_name ? `ATS Analysis — ${doc.company_name}` : 'ATS Analysis',
           subtitle: `Score: ${doc.ats_score}%`,
           score: doc.ats_score,
           date: doc.created_at,
-          icon: '🎯',
+          icon: '📊',
           data: doc
         });
       }
@@ -1163,33 +1167,36 @@ function viewDocument(docId) {
   document.getElementById('docViewerTitle').textContent = doc.icon + ' ' + doc.title;
   const contentEl = document.getElementById('docViewerContent');
 
-  if (doc.type === 'cover') {
+  if (doc.source === 'resume') {
+    // Always render resume table records as formatted resumes
+    contentEl.innerHTML = `<div class="resume-preview">${buildResumeHTML(doc.data)}</div>`;
+  } else if (doc.type === 'cover') {
+    // Cover letter from analysis
     contentEl.innerHTML = `<div class="letter-output" style="background:var(--bg);border:1px solid var(--border);">${doc.data.cover_letter || 'No content available'}</div>`;
-  } else if (doc.type === 'tailored') {
-    // ATS analysis - show score details
+  } else if (doc.type === 'tailored' && doc.source === 'analysis') {
+    // ATS analysis - show score + details + cover letter if present
     const a = doc.data;
     let html = `<div style="text-align:center;margin-bottom:1.5rem;">
       <div class="gauge-circle" style="width:120px;height:120px;margin:0 auto;background:conic-gradient(${a.ats_score>=70?'var(--success)':a.ats_score>=50?'var(--warn)':'var(--danger)'} ${a.ats_score*3.6}deg, var(--bg) 0);">
         <span class="gauge-score" style="font-size:2rem;">${a.ats_score}%</span>
       </div>
+      <div style="color:var(--text2);font-size:0.85rem;margin-top:0.5rem;">ATS Compatibility Score</div>
     </div>`;
     if (a.missing_keywords?.length) {
-      html += `<div style="margin-bottom:1rem;"><strong style="color:var(--danger);">Missing Keywords:</strong> ${a.missing_keywords.map(k=>`<span class="tag tag-red">${k}</span>`).join('')}</div>`;
+      html += `<div style="margin-bottom:1rem;"><strong style="color:var(--danger);">Missing Keywords:</strong><div style="margin-top:0.5rem;"> ${a.missing_keywords.map(k=>`<span class="tag tag-red">${k}</span>`).join('')}</div></div>`;
     }
     if (a.missing_skills?.length) {
-      html += `<div style="margin-bottom:1rem;"><strong style="color:var(--danger);">Missing Skills:</strong> ${a.missing_skills.map(s=>`<span class="tag tag-red">${s}</span>`).join('')}</div>`;
+      html += `<div style="margin-bottom:1rem;"><strong style="color:var(--danger);">Missing Skills:</strong><div style="margin-top:0.5rem;"> ${a.missing_skills.map(s=>`<span class="tag tag-red">${s}</span>`).join('')}</div></div>`;
     }
     if (a.recommendations?.length) {
       html += `<div style="margin-bottom:1rem;"><strong style="color:var(--accent);">Recommendations:</strong>${a.recommendations.map(r=>`<div class="rec-item"><strong>${r.category||''}:</strong> ${r.suggestion||r}</div>`).join('')}</div>`;
     }
     if (a.cover_letter) {
-      html += `<div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3>✉️ Cover Letter</h3><div class="letter-output" style="margin-top:0.75rem;background:var(--bg);border:1px solid var(--border);">${a.cover_letter}</div></div>`;
+      html += `<div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.5rem;"><h3 style="margin-bottom:0.75rem;">✉️ Cover Letter</h3><div class="letter-output" style="background:var(--bg);border:1px solid var(--border);">${a.cover_letter}</div></div>`;
     }
     contentEl.innerHTML = html;
   } else {
-    // Regular resume
-    const r = doc.data;
-    contentEl.innerHTML = `<div class="resume-preview">${buildResumeHTML(r)}</div>`;
+    contentEl.innerHTML = `<p style="color:var(--text2);text-align:center;padding:2rem;">No preview available for this document.</p>`;
   }
 
   document.getElementById('docViewer').classList.remove('hidden');
