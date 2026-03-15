@@ -240,6 +240,7 @@ textarea{min-height:120px;}
         <div class="user-plan" id="userPlan">Free</div>
       </div>
     </div>
+    <div class="nav-item hidden" id="adminLink" onclick="window.location.href='/admin'" style="margin-top:0.5rem;"><span class="icon">🛠️</span><span>Admin</span></div>
     <div class="nav-item" onclick="logout()" style="margin-top:0.5rem;"><span class="icon">🚪</span><span data-i18n="nav.logout">Log Out</span></div>
   </div>
 </aside>
@@ -1196,6 +1197,10 @@ async function loadUser() {
     document.getElementById('statResumes').textContent = currentUser.stats?.resumes || 0;
     document.getElementById('statAnalyses').textContent = currentUser.stats?.analyses || 0;
     document.getElementById('statInterviews').textContent = currentUser.stats?.interviews || 0;
+    // Show admin link if user is admin
+    if (currentUser.is_admin || currentUser.isAdmin) {
+      document.getElementById('adminLink').classList.remove('hidden');
+    }
     // For now during development, grant all access
     // Later: check currentUser.plan and show gates
   } catch(e) { localStorage.removeItem('auth_token'); window.location.href = '/'; }
