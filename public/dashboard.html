@@ -1219,6 +1219,8 @@ function showPage(page) {
   if (page === 'docs') loadDocuments();
   // Load previous jobs for interview page
   if (page === 'interview') loadInterviewJobs();
+  // Load latest resume when visiting resume page
+  if (page === 'resume') loadLatestResume();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -1343,6 +1345,38 @@ function upgradeTo(plan) {
 }
 
 // ===================== RESUME (FREE) =====================
+
+// Load latest GENERIC resume on page visit
+let latestResumeLoaded = false;
+async function loadLatestResume() {
+  if (latestResumeLoaded || !document.getElementById('resumeResult').classList.contains('hidden')) return;
+  try {
+    const r = await fetch(API+'/api/documents/list', { headers: headers() });
+    const d = await r.json();
+    if (!r.ok) return;
+    // Filter to only generic resumes (not optimized/tailored)
+    const generics = (d.resumes || []).filter(r => !r.title?.toLowerCase().includes('optimized'));
+    if (generics.length === 0) return;
+    const latest = generics[0];
+    const parse = (val) => {
+      if (!val) return [];
+      if (typeof val === 'string') try { return JSON.parse(val); } catch(e) { return []; }
+      return val;
+    };
+    const resume = {
+      fullName: latest.full_name || '', email: latest.email || '',
+      phone: latest.phone || '', location: latest.location || '',
+      linkedinUrl: latest.linkedin_url || '', summary: latest.summary || '',
+      experience: parse(latest.experience), education: parse(latest.education),
+      skills: parse(latest.skills), certifications: parse(latest.certifications),
+      languages: parse(latest.languages)
+    };
+    renderResume(resume, 'resumePreview');
+    document.getElementById('resumeResult').classList.remove('hidden');
+    latestResumeLoaded = true;
+  } catch(e) { console.error('Load latest resume error:', e); }
+}
+
 function switchResumeTab(tab) {
   document.querySelectorAll('#page-resume .input-method button').forEach((b,i)=> {
     b.classList.toggle('active', (tab==='create'&&i===0)||(tab==='upload'&&i===1)||(tab==='file'&&i===2));
