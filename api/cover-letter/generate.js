@@ -33,17 +33,18 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 Write a cover letter that:
-1. Opens with a strong, specific hook (not "I am writing to apply...")
-2. Connects the candidate's experience directly to job requirements
-3. Shows knowledge of the company/role
-4. Includes 2-3 specific achievements from the resume that match the job
-5. Ends with a confident call to action
-6. Follows cover letter conventions for ${targetCountry || 'Canada'}
-7. Is approximately 300-400 words${langInstruction}
+1. Starts with today's date on its own line
+2. Then the recipient block: Hiring Manager (or specific name if known), Company name, city
+3. Then "Subject: Application for [Job Title]" on its own line
+4. Then "Dear Hiring Manager," (or appropriate salutation)
+5. Body: Opens with a strong hook (not "I am writing to apply..."), connects experience to job requirements, includes 2-3 specific achievements, shows knowledge of the company
+6. Closing: "Sincerely," followed by the candidate's full name, email, and phone on separate lines
+7. Follows cover letter conventions for ${targetCountry || 'Canada'}
+8. Is approximately 300-400 words for the body${langInstruction}
 
 Return in this exact JSON format (no markdown, no backticks):
 {
-  "coverLetter": "The full cover letter text with proper paragraphs separated by \\n\\n",
+  "coverLetter": "Full formatted letter including date, recipient, subject, salutation, body paragraphs separated by \\n\\n, closing, and signature block",
   "highlights": ["Key selling point 1 used", "Key selling point 2 used"],
   "tips": ["Tip for the candidate about this letter"]
 }`;
