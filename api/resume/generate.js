@@ -49,7 +49,10 @@ export default async function handler(req, res) {
 
     if (mode === 'generic') {
       // FREE TIER: Generic resume, no job description needed
-      prompt = `You are an expert resume writer. Create a polished, professional resume from the information provided.
+      const langTop = language === 'fr' 
+        ? 'LANGUAGE: You MUST write ALL text content in FRENCH (Canadian French). Every summary, bullet point, job description, and tip must be in French. Only keep proper nouns (names, companies, cities) in their original form.\n\n' 
+        : '';
+      prompt = `${langTop}You are an expert resume writer. Create a polished, professional resume from the information provided.
 
 TARGET COUNTRY: ${targetCountry || 'Canada'}
 
@@ -63,20 +66,20 @@ Return the resume in this exact JSON format (no markdown, no backticks):
   "phone": "${personalInfo?.phone || ''}",
   "location": "${personalInfo?.location || ''}",
   "linkedinUrl": "${personalInfo?.linkedin || ''}",
-  "summary": "Strong professional summary (3-4 sentences)",
+  "summary": "${language === 'fr' ? 'Résumé professionnel en FRANÇAIS (3-4 phrases)' : 'Strong professional summary (3-4 sentences)'}",
   "experience": [
     {
-      "title": "Job Title",
+      "title": "${language === 'fr' ? 'Titre du poste EN FRANÇAIS' : 'Job Title'}",
       "company": "Company Name",
       "location": "City, Country",
       "startDate": "Mon YYYY",
-      "endDate": "Mon YYYY or Present",
-      "bullets": ["Achievement-focused bullet with metrics", "bullet 2", "bullet 3"]
+      "endDate": "${language === 'fr' ? 'Mon YYYY ou Présent' : 'Mon YYYY or Present'}",
+      "bullets": ["${language === 'fr' ? 'Réalisation en FRANÇAIS avec métriques' : 'Achievement-focused bullet with metrics'}", "bullet 2", "bullet 3"]
     }
   ],
   "education": [
     {
-      "degree": "Degree Name",
+      "degree": "${language === 'fr' ? 'Nom du diplôme EN FRANÇAIS' : 'Degree Name'}",
       "school": "School Name",
       "year": "YYYY",
       "details": ""
@@ -85,12 +88,15 @@ Return the resume in this exact JSON format (no markdown, no backticks):
   "skills": ["skill1", "skill2"],
   "certifications": [],
   "languages": [],
-  "tips": ["Tip to improve this resume further"]
+  "tips": ["${language === 'fr' ? 'Conseil en français' : 'Tip to improve this resume further'}"]
 }
 
 Follow resume standards for ${targetCountry || 'Canada'}. Use strong action verbs and quantify achievements where possible.${langInstruction}`;
     } else if (mode === 'optimize' && existingResume) {
-      prompt = `You are an expert resume writer and ATS optimization specialist.
+      const langTop = language === 'fr'
+        ? 'LANGUAGE: You MUST write ALL text content in FRENCH (Canadian French). Summaries, bullet points, improvements — everything in French. Keep proper nouns unchanged.\n\n'
+        : '';
+      prompt = `${langTop}You are an expert resume writer and ATS optimization specialist.
 
 TASK: Optimize the following resume to match the job description. Keep the person's real experience but reword, restructure, and add relevant keywords to maximize ATS compatibility.
 
@@ -109,29 +115,29 @@ Return the optimized resume in this exact JSON format (no markdown, no backticks
   "phone": "...",
   "location": "...",
   "linkedinUrl": "...",
-  "summary": "Professional summary optimized for this role (3-4 sentences)",
+  "summary": "${language === 'fr' ? 'Résumé professionnel optimisé EN FRANÇAIS' : 'Professional summary optimized for this role (3-4 sentences)'}",
   "experience": [
     {
-      "title": "Job Title",
+      "title": "${language === 'fr' ? 'Titre du poste EN FRANÇAIS' : 'Job Title'}",
       "company": "Company Name",
       "location": "City, Country",
       "startDate": "Mon YYYY",
-      "endDate": "Mon YYYY or Present",
-      "bullets": ["Achievement-focused bullet 1", "bullet 2", "bullet 3"]
+      "endDate": "${language === 'fr' ? 'Mon YYYY ou Présent' : 'Mon YYYY or Present'}",
+      "bullets": ["${language === 'fr' ? 'Réalisation en FRANÇAIS' : 'Achievement-focused bullet 1'}", "bullet 2", "bullet 3"]
     }
   ],
   "education": [
     {
-      "degree": "Degree Name",
+      "degree": "${language === 'fr' ? 'Nom du diplôme' : 'Degree Name'}",
       "school": "School Name",
       "year": "YYYY",
-      "details": "Optional honors/GPA"
+      "details": ""
     }
   ],
   "skills": ["skill1", "skill2"],
   "certifications": ["cert1"],
-  "languages": ["English (Native)", "French (Fluent)"],
-  "improvements": ["What was changed and why - bullet 1", "bullet 2"]
+  "languages": ["${language === 'fr' ? 'Anglais (Natif), Français (Courant)' : 'English (Native), French (Fluent)'}"],
+  "improvements": ["${language === 'fr' ? 'Ce qui a été modifié et pourquoi' : 'What was changed and why'}", "bullet 2"]
 }
 
 Follow resume standards for ${targetCountry || 'Canada'}. Use strong action verbs. Quantify achievements where possible.${langInstruction}`;

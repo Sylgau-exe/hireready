@@ -18,7 +18,10 @@ IMPORTANT: Write the ENTIRE cover letter in FRENCH (Canadian French).' : '';
   if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
   try {
-    const prompt = `You are an expert cover letter writer. Create a compelling, professional cover letter.
+    const langTop = language === 'fr'
+      ? 'LANGUAGE: Write the ENTIRE cover letter in FRENCH (Canadian French). The letter, highlights, and tips must ALL be in French.\n\n'
+      : '';
+    const prompt = `${langTop}You are an expert cover letter writer. Create a compelling, professional cover letter.
 
 TARGET COUNTRY: ${targetCountry || 'Canada'}
 COMPANY: ${companyName || 'the company'}
