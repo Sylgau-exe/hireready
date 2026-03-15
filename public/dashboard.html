@@ -732,6 +732,27 @@ textarea{min-height:120px;}
     </div>
   </div>
 
+  <!-- EXPORT LANGUAGE MODAL -->
+  <div id="exportLangModal" class="hidden" style="position:fixed;inset:0;background:rgba(5,10,18,0.85);z-index:300;display:flex;align-items:center;justify-content:center;">
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2rem;width:420px;max-width:90vw;text-align:center;">
+      <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;margin-bottom:0.5rem;" id="exportModalTitle">📥 Download PDF</h3>
+      <p style="color:var(--text2);margin-bottom:1.5rem;" id="exportModalDesc">Choose the language for your document</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1.5rem;">
+        <button class="btn btn-outline" onclick="doExport('en')" style="flex:1;justify-content:center;padding:1rem;font-size:1rem;">
+          🇬🇧 English
+        </button>
+        <button class="btn btn-outline" onclick="doExport('fr')" style="flex:1;justify-content:center;padding:1rem;font-size:1rem;">
+          🇫🇷 Français
+        </button>
+      </div>
+      <div id="exportTranslating" class="hidden" style="padding:1rem;">
+        <div class="spinner" style="width:24px;height:24px;margin:0 auto 0.5rem;"></div>
+        <p style="color:var(--text2);font-size:0.9rem;">Translating...</p>
+      </div>
+      <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.85rem;font-family:inherit;" onclick="closeExportModal()">Cancel</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1328,6 +1349,8 @@ async function uploadResume() {
 }
 
 function renderResume(r, targetId) {
+  // Store structured data for translation export
+  window._lastResumeForExport = r;
   const expHtml = (r.experience||[]).map(e=>`
     <div style="margin-bottom:1rem;">
       <div class="exp-title">${e.title}</div>
@@ -1358,13 +1381,119 @@ function copyResumeText() {
   navigator.clipboard.writeText(el.innerText).then(()=>alert('Resume copied!'));
 }
 
-// ===================== PDF EXPORT =====================
+// ===================== PDF EXPORT WITH LANGUAGE CHOICE =====================
+let pendingExport = null; // { type: 'resume'|'cover'|'docviewer', sourceId, content, resumeData }
+
 function exportResumePDF(targetId) {
   const sourceId = targetId || 'resumePreview';
   const el = document.getElementById(sourceId);
   if (!el || !el.innerHTML.trim()) return alert('No resume to export');
+  pendingExport = { type: 'resume', sourceId, content: el.innerHTML };
+  showExportModal();
+}
+
+function exportCoverLetterPDF() {
+  const el = document.getElementById('coverLetterOutput');
+  if (!el || !el.textContent.trim()) return alert('No cover letter to export');
+  pendingExport = { type: 'cover', content: el.textContent };
+  showExportModal();
+}
+
+function exportDocViewerPDF() {
+  const el = document.getElementById('docViewerContent');
+  const isLetter = el.querySelector('.letter-output');
+  const isResume = el.querySelector('.resume-preview');
+  if (isLetter) {
+    pendingExport = { type: 'cover', content: isLetter.textContent };
+  } else if (isResume) {
+    pendingExport = { type: 'resume', sourceId: null, content: isResume.innerHTML };
+  } else {
+    pendingExport = { type: 'raw', content: el.innerHTML };
+  }
+  showExportModal();
+}
+
+function showExportModal() {
+  document.getElementById('exportTranslating').classList.add('hidden');
+  document.getElementById('exportLangModal').classList.remove('hidden');
+  document.getElementById('exportLangModal').style.display = 'flex';
+}
+
+function closeExportModal() {
+  document.getElementById('exportLangModal').classList.add('hidden');
+  document.getElementById('exportLangModal').style.display = 'none';
+  pendingExport = null;
+}
+
+async function doExport(lang) {
+  if (!pendingExport) return;
+
+  // Detect current document language (rough heuristic)
+  const text = pendingExport.content || '';
+  const frWords = (text.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|vous|cette|ces)\b/gi) || []).length;
+  const enWords = (text.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our|your)\b/gi) || []).length;
+  const docLang = frWords > enWords ? 'fr' : 'en';
+
+  // If same language, export directly
+  if (lang === docLang) {
+    printExport(pendingExport);
+    closeExportModal();
+    return;
+  }
+
+  // Need translation
+  document.getElementById('exportTranslating').classList.remove('hidden');
+
+  try {
+    let body;
+    if (pendingExport.type === 'resume') {
+      // Try to find structured resume data from last render
+      const resumeData = window._lastResumeForExport || null;
+      if (resumeData) {
+        body = { content: resumeData, contentType: 'resume_json', targetLang: lang };
+      } else {
+        // Fall back to translating HTML text
+        const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
+        const plainText = el ? el.innerText : text.replace(/<[^>]+>/g, ' ');
+        body = { content: plainText, contentType: 'cover_letter', targetLang: lang };
+      }
+    } else {
+      body = { content: pendingExport.content, contentType: 'cover_letter', targetLang: lang };
+    }
+
+    const r = await fetch(API+'/api/documents/translate', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+
+    if (!r.ok) {
+      alert(d.error || 'Translation failed. Exporting in original language.');
+      printExport(pendingExport);
+      closeExportModal();
+      return;
+    }
+
+    if (d.contentType === 'resume_json' && d.translated) {
+      // Re-render translated resume
+      const translatedHtml = buildResumeHTML(d.translated);
+      printExport({ ...pendingExport, content: translatedHtml, type: 'resume' });
+    } else {
+      printExport({ ...pendingExport, content: d.translated, type: 'cover' });
+    }
+    closeExportModal();
+  } catch (e) {
+    console.error('Translation error:', e);
+    alert('Translation failed. Exporting in original language.');
+    printExport(pendingExport);
+    closeExportModal();
+  }
+}
+
+function printExport(exp) {
   const w = window.open('','_blank','width=850,height=1100');
-  w.document.write(`<!DOCTYPE html><html><head><title>Resume — HireReady</title>
+  if (exp.type === 'resume') {
+    w.document.write(`<!DOCTYPE html><html><head><title>Resume — HireReady</title>
 <style>
   @page { size: letter; margin: 0.7in; }
   body { font-family: Georgia, 'Times New Roman', serif; line-height: 1.55; color: #1a1a1a; margin: 0; padding: 0; }
@@ -1382,24 +1511,26 @@ function exportResumePDF(targetId) {
   .skill-pill { background: #e8f4fd; color: #1e6fa1; padding: 2px 8px; border-radius: 3px;
     font-size: 8.5pt; font-family: 'Helvetica Neue', Arial, sans-serif;
     -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-</style></head><body>${el.innerHTML}</body></html>`);
-  w.document.close();
-  setTimeout(() => { w.print(); }, 400);
-}
-
-function exportCoverLetterPDF() {
-  const el = document.getElementById('coverLetterOutput');
-  if (!el || !el.textContent.trim()) return alert('No cover letter to export');
-  const w = window.open('','_blank','width=850,height=1100');
-  w.document.write(`<!DOCTYPE html><html><head><title>Cover Letter — HireReady</title>
+</style></head><body>${exp.content}</body></html>`);
+  } else if (exp.type === 'cover') {
+    w.document.write(`<!DOCTYPE html><html><head><title>Cover Letter — HireReady</title>
 <style>
   @page { size: letter; margin: 1in; }
   body { font-family: Georgia, 'Times New Roman', serif; font-size: 11.5pt; line-height: 1.7; color: #1a1a1a; margin: 0; padding: 0; }
   .letter { white-space: pre-wrap; }
-</style></head><body><div class="letter">${el.textContent}</div></body></html>`);
+</style></head><body><div class="letter">${exp.content}</div></body></html>`);
+  } else {
+    w.document.write(`<!DOCTYPE html><html><head><title>Document — HireReady</title>
+<style>@page{size:letter;margin:0.75in;}body{font-family:Georgia,serif;line-height:1.6;color:#1a1a1a;}</style>
+</head><body>${exp.content}</body></html>`);
+  }
   w.document.close();
-  setTimeout(() => { w.print(); }, 400);
+  setTimeout(() => w.print(), 400);
 }
+
+// Store last rendered resume data for translation
+const _origRenderResume = renderResume;
+// We'll capture in renderResume below
 
 // ===================== FILE UPLOAD =====================
 // PDF.js worker
@@ -1766,32 +1897,6 @@ function closeDocViewer() {
 function copyDocViewer() {
   const el = document.getElementById('docViewerContent');
   navigator.clipboard.writeText(el.innerText).then(()=>alert('Copied!'));
-}
-
-function exportDocViewerPDF() {
-  const el = document.getElementById('docViewerContent');
-  const isLetter = el.querySelector('.letter-output');
-  const w = window.open('','_blank','width=850,height=1100');
-  if (isLetter) {
-    w.document.write(`<!DOCTYPE html><html><head><title>Cover Letter — HireReady</title>
-    <style>@page{size:letter;margin:1in;}body{font-family:Georgia,serif;font-size:11.5pt;line-height:1.7;color:#1a1a1a;}.letter{white-space:pre-wrap;}</style>
-    </head><body><div class="letter">${isLetter.textContent}</div></body></html>`);
-  } else {
-    w.document.write(`<!DOCTYPE html><html><head><title>Resume — HireReady</title>
-    <style>@page{size:letter;margin:0.7in;}body{font-family:Georgia,'Times New Roman',serif;line-height:1.55;color:#1a1a1a;}
-    h2{font-family:'Helvetica Neue',Arial,sans-serif;font-size:22pt;margin:0 0 2px 0;}
-    .contact{color:#555;font-size:9.5pt;margin-bottom:16px;}
-    .section-head{color:#2563eb;font-family:'Helvetica Neue',Arial,sans-serif;font-size:9.5pt;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #2563eb;padding-bottom:3px;margin:18px 0 8px 0;}
-    .exp-title{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:11pt;}
-    .exp-company{color:#555;font-size:9.5pt;margin-bottom:4px;}
-    ul{padding-left:18px;margin:4px 0 12px;}li{font-size:10pt;margin-bottom:3px;line-height:1.45;}
-    p{font-size:10.5pt;margin:0 0 6px;}
-    .skill-pills{display:flex;flex-wrap:wrap;gap:4px;}
-    .skill-pill{background:#e8f4fd;color:#1e6fa1;padding:2px 8px;border-radius:3px;font-size:8.5pt;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    </style></head><body>${el.querySelector('.resume-preview')?.innerHTML || el.innerHTML}</body></html>`);
-  }
-  w.document.close();
-  setTimeout(() => w.print(), 400);
 }
 
 // Close viewer on backdrop click
