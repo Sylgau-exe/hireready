@@ -1504,6 +1504,7 @@ async function generateTranslatedResume(targetLang) {
       body: JSON.stringify({
         mode: 'generic',
         language: targetLang,
+        translateTo: targetLang,
         targetCountry: 'CA',
         personalInfo: { rawResume: el.innerText.substring(0, 4000) }
       })
@@ -1530,15 +1531,14 @@ async function generateTranslatedOptimized(targetLang) {
   showLoading(targetLang === 'fr' ? 'Génération du CV optimisé en français...' : 'Generating optimized English resume...');
 
   try {
-    const jd = getJobDesc();
     const r = await fetch(API+'/api/resume/generate', {
       method: 'POST', headers: headers(),
       body: JSON.stringify({
-        mode: 'optimize',
+        mode: 'generic',
         language: targetLang,
-        jobDescription: jd,
-        existingResume: el.innerText.substring(0, 4000),
-        targetCountry: document.getElementById('tailorCountry').value
+        translateTo: targetLang,
+        targetCountry: document.getElementById('tailorCountry').value,
+        personalInfo: { rawResume: el.innerText.substring(0, 4000) }
       })
     });
     const d = await r.json();

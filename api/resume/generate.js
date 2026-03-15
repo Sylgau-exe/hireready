@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { mode, jobDescription, targetCountry, personalInfo, existingResume, language, translateText, translateLang } = req.body;
+  const { mode, jobDescription, targetCountry, personalInfo, existingResume, language, translateText, translateLang, translateTo } = req.body;
   // mode: 'generic', 'create', 'optimize', or 'translate'
   const langInstruction = language === 'fr' ? '\n\nIMPORTANT: Generate ALL content (summary, bullet points, tips) in FRENCH (Canadian French).' : '';
 
@@ -47,7 +47,58 @@ export default async function handler(req, res) {
   try {
     let prompt;
 
-    if (mode === 'generic') {
+    if (mode === 'generic' && translateTo) {
+      // TRANSLATION MODE: explicitly translate resume content to another language
+      const targetLangName = translateTo === 'fr' ? 'FRENCH (Canadian French / québécois)' : 'ENGLISH';
+      const rawText = personalInfo?.rawResume || JSON.stringify(personalInfo);
+      prompt = `You are a professional bilingual resume translator.
+
+YOUR TASK: TRANSLATE the following resume into ${targetLangName}. 
+
+RULES:
+- TRANSLATE every piece of text: the professional summary, all job titles, all bullet points, all skill names, education descriptions
+- DO NOT keep the content in the original language
+- KEEP proper nouns unchanged: person's name, company names (McGill University, Cirque Du Soleil, etc.), city names
+- KEEP dates, phone numbers, and email unchanged
+- The output must be a COMPLETE resume entirely in ${targetLangName}
+
+RESUME TO TRANSLATE:
+${rawText.substring(0, 4000)}
+
+Return the TRANSLATED resume in this exact JSON format (no markdown, no backticks):
+{
+  "fullName": "Keep original name",
+  "email": "Keep original",
+  "phone": "Keep original",
+  "location": "Keep original",
+  "linkedinUrl": "Keep original",
+  "summary": "THE PROFESSIONAL SUMMARY TRANSLATED INTO ${targetLangName}",
+  "experience": [
+    {
+      "title": "JOB TITLE TRANSLATED INTO ${targetLangName}",
+      "company": "Keep original company name",
+      "location": "Keep original",
+      "startDate": "Keep original",
+      "endDate": "${translateTo === 'fr' ? 'Keep original or use Présent' : 'Keep original or use Present'}",
+      "bullets": ["EACH BULLET POINT TRANSLATED INTO ${targetLangName}"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "DEGREE NAME TRANSLATED INTO ${targetLangName}",
+      "school": "Keep original school name",
+      "year": "Keep original",
+      "details": ""
+    }
+  ],
+  "skills": ["EACH SKILL TRANSLATED INTO ${targetLangName}"],
+  "certifications": [],
+  "languages": [],
+  "tips": []
+}
+
+CRITICAL: Every text value in the JSON must be in ${targetLangName}. Do NOT return English content when asked for French.`;
+    } else if (mode === 'generic') {
       // FREE TIER: Generic resume, no job description needed
       const langTop = language === 'fr' 
         ? 'LANGUAGE: You MUST write ALL text content in FRENCH (Canadian French). Every summary, bullet point, job description, and tip must be in French. Only keep proper nouns (names, companies, cities) in their original form.\n\n' 
