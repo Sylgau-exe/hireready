@@ -208,6 +208,9 @@ textarea{min-height:120px;}
 <aside class="sidebar">
   <div class="logo">HireReady</div>
   <div class="nav-item active" onclick="showPage('home')"><span class="icon">🏠</span><span>Home</span></div>
+  <div class="nav-item" onclick="showPage('docs')">
+    <span class="icon">📁</span><span>My Documents</span>
+  </div>
   <div class="nav-item" onclick="showPage('resume')">
     <span class="icon">📄</span><span>My Resume</span>
     <span class="tier-badge tier-free">Free</span>
@@ -277,6 +280,50 @@ textarea{min-height:120px;}
         <strong>Step 3 (Premium):</strong> Prepare for the interview with AI-generated questions and voice-based simulation with tone feedback.
       </p>
       <button class="btn btn-primary" onclick="showPage('resume')">📄 Start with My Resume</button>
+    </div>
+  </div>
+
+  <!-- ==================== MY DOCUMENTS ==================== -->
+  <div id="page-docs" class="hidden">
+    <div class="page-header">
+      <h1>📁 My Documents</h1>
+      <p>All your resumes, tailored versions, and cover letters in one place</p>
+    </div>
+
+    <div class="input-method" style="margin-bottom:1.5rem;">
+      <button class="active" onclick="filterDocs('all')">All</button>
+      <button onclick="filterDocs('resume')">📄 Resumes</button>
+      <button onclick="filterDocs('tailored')">🎯 Tailored</button>
+      <button onclick="filterDocs('cover')">✉️ Cover Letters</button>
+    </div>
+
+    <div id="docsLoading" style="text-align:center;padding:3rem;color:var(--text2);">
+      <div class="spinner" style="width:30px;height:30px;margin:0 auto 1rem;"></div>
+      Loading your documents...
+    </div>
+
+    <div id="docsList"></div>
+
+    <div id="docsEmpty" class="hidden" style="text-align:center;padding:4rem 2rem;">
+      <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
+      <h3 style="margin-bottom:0.5rem;">No documents yet</h3>
+      <p style="color:var(--text2);margin-bottom:1.5rem;">Create your first resume to get started!</p>
+      <button class="btn btn-primary" onclick="showPage('resume')">📄 Build My Resume</button>
+    </div>
+
+    <!-- Document Viewer Modal -->
+    <div id="docViewer" class="hidden" style="position:fixed;inset:0;background:rgba(5,10,18,0.9);z-index:200;display:flex;align-items:center;justify-content:center;padding:2rem;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:850px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1.5rem;border-bottom:1px solid var(--border);">
+          <h3 id="docViewerTitle" style="margin:0;"></h3>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button class="btn btn-outline btn-sm" onclick="copyDocViewer()">📋 Copy</button>
+            <button class="btn btn-primary btn-sm" onclick="exportDocViewerPDF()">📥 PDF</button>
+            <button style="background:none;border:none;color:var(--text2);font-size:1.5rem;cursor:pointer;padding:0.25rem;" onclick="closeDocViewer()">✕</button>
+          </div>
+        </div>
+        <div id="docViewerContent" style="padding:1.5rem;"></div>
+      </div>
     </div>
   </div>
 
@@ -686,7 +733,7 @@ function showPage(page) {
   document.querySelectorAll('[id^="page-"]').forEach(p=>p.classList.add('hidden'));
   document.getElementById('page-'+page).classList.remove('hidden');
   document.querySelectorAll('.sidebar .nav-item').forEach((n,i)=>{
-    const pages=['home','resume','tailor','interview'];
+    const pages=['home','docs','resume','tailor','interview'];
     n.classList.toggle('active', pages[i]===page);
   });
   // Show auto-fill hint on tailor page if we have a saved resume
@@ -694,6 +741,8 @@ function showPage(page) {
     document.getElementById('tailorAutoFill').classList.remove('hidden');
     document.getElementById('tailorAutoFill').style.display = 'flex';
   }
+  // Load documents when switching to docs page
+  if (page === 'docs') loadDocuments();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -988,6 +1037,223 @@ function fillCreateForm() {
   switchResumeTab('create');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ===================== MY DOCUMENTS =====================
+let allDocs = [];
+let currentFilter = 'all';
+
+async function loadDocuments() {
+  document.getElementById('docsLoading').style.display = 'block';
+  document.getElementById('docsList').innerHTML = '';
+  document.getElementById('docsEmpty').classList.add('hidden');
+
+  try {
+    const r = await fetch(API+'/api/documents/list', { headers:headers() });
+    const d = await r.json();
+    if (!r.ok) throw new Error();
+
+    allDocs = [];
+
+    // Process resumes
+    (d.resumes || []).forEach(doc => {
+      allDocs.push({
+        id: doc.id,
+        type: doc.title?.toLowerCase().includes('optimized') ? 'tailored' : 'resume',
+        title: doc.title || 'Resume',
+        subtitle: doc.full_name || '',
+        country: doc.target_country || 'CA',
+        date: doc.created_at,
+        icon: doc.title?.toLowerCase().includes('optimized') ? '🎯' : '📄',
+        data: doc
+      });
+    });
+
+    // Process analyses (cover letters + tailored analyses)
+    (d.analyses || []).forEach(doc => {
+      if (doc.cover_letter) {
+        allDocs.push({
+          id: 'cl-' + doc.id,
+          type: 'cover',
+          title: doc.company_name ? `Cover Letter — ${doc.company_name}` : 'Cover Letter',
+          subtitle: doc.job_title || '',
+          score: doc.ats_score,
+          date: doc.created_at,
+          icon: '✉️',
+          data: doc
+        });
+      }
+      if (doc.ats_score > 0 && doc.optimized_resume) {
+        allDocs.push({
+          id: 'ats-' + doc.id,
+          type: 'tailored',
+          title: doc.company_name ? `Tailored for ${doc.company_name}` : 'ATS Analysis',
+          subtitle: `Score: ${doc.ats_score}%`,
+          score: doc.ats_score,
+          date: doc.created_at,
+          icon: '🎯',
+          data: doc
+        });
+      }
+    });
+
+    // Sort by date
+    allDocs.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    document.getElementById('docsLoading').style.display = 'none';
+    renderDocs();
+  } catch(e) {
+    console.error('Load docs error:', e);
+    document.getElementById('docsLoading').style.display = 'none';
+    document.getElementById('docsEmpty').classList.remove('hidden');
+  }
+}
+
+function filterDocs(type) {
+  currentFilter = type;
+  document.querySelectorAll('#page-docs .input-method button').forEach((b,i) => {
+    const types = ['all','resume','tailored','cover'];
+    b.classList.toggle('active', types[i] === type);
+  });
+  renderDocs();
+}
+
+function renderDocs() {
+  const filtered = currentFilter === 'all' ? allDocs : allDocs.filter(d => d.type === currentFilter);
+  
+  if (filtered.length === 0) {
+    document.getElementById('docsList').innerHTML = '';
+    document.getElementById('docsEmpty').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('docsEmpty').classList.add('hidden');
+
+  document.getElementById('docsList').innerHTML = filtered.map(doc => {
+    const date = new Date(doc.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const typeBadge = doc.type === 'resume' ? '<span class="tier-badge tier-free" style="position:static;">FREE</span>'
+      : doc.type === 'tailored' ? '<span class="tier-badge tier-pro" style="position:static;">PRO</span>'
+      : '<span class="tier-badge tier-pro" style="position:static;">PRO</span>';
+    const scoreHtml = doc.score ? `<span style="color:${doc.score>=70?'var(--success)':doc.score>=50?'var(--warn)':'var(--danger)'};font-weight:700;font-size:0.9rem;">${doc.score}%</span>` : '';
+
+    return `<div class="card" style="cursor:pointer;transition:all 0.2s;" onclick="viewDocument('${doc.id}')" onmouseover="this.style.borderColor='rgba(56,189,248,0.3)'" onmouseout="this.style.borderColor=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div style="font-size:1.8rem;">${doc.icon}</div>
+          <div>
+            <div style="font-weight:600;display:flex;align-items:center;gap:0.5rem;">
+              ${doc.title} ${typeBadge}
+            </div>
+            <div style="color:var(--text2);font-size:0.85rem;margin-top:0.15rem;">
+              ${doc.subtitle ? doc.subtitle + ' · ' : ''}${date}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          ${scoreHtml}
+          <span style="color:var(--text2);font-size:1.2rem;">→</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function viewDocument(docId) {
+  const doc = allDocs.find(d => d.id === docId || d.id === String(docId));
+  if (!doc) return;
+
+  document.getElementById('docViewerTitle').textContent = doc.icon + ' ' + doc.title;
+  const contentEl = document.getElementById('docViewerContent');
+
+  if (doc.type === 'cover') {
+    // Show cover letter
+    contentEl.innerHTML = `<div class="letter-output" style="background:var(--bg);border:1px solid var(--border);">${doc.data.cover_letter}</div>`;
+  } else if (doc.type === 'tailored' && doc.data.optimized_resume) {
+    // Show optimized resume
+    const r = doc.data.optimized_resume;
+    contentEl.innerHTML = `<div class="resume-preview">${buildResumeHTML(r)}</div>`;
+  } else {
+    // Show regular resume
+    const r = doc.data;
+    contentEl.innerHTML = `<div class="resume-preview">${buildResumeHTML(r)}</div>`;
+  }
+
+  document.getElementById('docViewer').classList.remove('hidden');
+  document.getElementById('docViewer').style.display = 'flex';
+}
+
+function buildResumeHTML(r) {
+  const expHtml = (r.experience||[]).map(e => {
+    if (typeof e === 'string') return `<p>${e}</p>`;
+    return `<div style="margin-bottom:1rem;">
+      <div class="exp-title">${e.title||''}</div>
+      <div class="exp-company">${e.company||''} · ${e.location||''} · ${e.startDate||e.start_date||''} – ${e.endDate||e.end_date||''}</div>
+      <ul>${(e.bullets||[]).map(b=>`<li>${b}</li>`).join('')}</ul>
+    </div>`;
+  }).join('');
+  const eduHtml = (r.education||[]).map(e => {
+    if (typeof e === 'string') return `<div>${e}</div>`;
+    return `<div><strong>${e.degree||''}</strong> — ${e.school||''} (${e.year||''}) ${e.details?'· '+e.details:''}</div>`;
+  }).join('');
+  const skillsHtml = (r.skills||[]).map(s => `<span class="skill-pill">${s}</span>`).join('');
+  const name = r.full_name || r.fullName || '';
+  const email = r.email || '';
+  const phone = r.phone || '';
+  const loc = r.location || '';
+  const linkedin = r.linkedin_url || r.linkedinUrl || '';
+  const summary = r.summary || '';
+  const langsHtml = (r.languages||[]).length ? `<div class="section-head">Languages</div><p>${r.languages.join(' · ')}</p>` : '';
+  const certsHtml = (r.certifications||[]).length ? `<div class="section-head">Certifications</div><p>${r.certifications.join(' · ')}</p>` : '';
+
+  return `
+    <h2>${name}</h2>
+    <div class="contact">${[email,phone,loc,linkedin].filter(Boolean).join(' · ')}</div>
+    ${summary ? '<div class="section-head">Professional Summary</div><p>'+summary+'</p>' : ''}
+    ${expHtml ? '<div class="section-head">Experience</div>'+expHtml : ''}
+    ${eduHtml ? '<div class="section-head">Education</div>'+eduHtml : ''}
+    ${skillsHtml ? '<div class="section-head">Skills</div><div class="skill-pills">'+skillsHtml+'</div>' : ''}
+    ${certsHtml}${langsHtml}`;
+}
+
+function closeDocViewer() {
+  document.getElementById('docViewer').classList.add('hidden');
+  document.getElementById('docViewer').style.display = 'none';
+}
+
+function copyDocViewer() {
+  const el = document.getElementById('docViewerContent');
+  navigator.clipboard.writeText(el.innerText).then(()=>alert('Copied!'));
+}
+
+function exportDocViewerPDF() {
+  const el = document.getElementById('docViewerContent');
+  const isLetter = el.querySelector('.letter-output');
+  const w = window.open('','_blank','width=850,height=1100');
+  if (isLetter) {
+    w.document.write(`<!DOCTYPE html><html><head><title>Cover Letter — HireReady</title>
+    <style>@page{size:letter;margin:1in;}body{font-family:Georgia,serif;font-size:11.5pt;line-height:1.7;color:#1a1a1a;}.letter{white-space:pre-wrap;}</style>
+    </head><body><div class="letter">${isLetter.textContent}</div></body></html>`);
+  } else {
+    w.document.write(`<!DOCTYPE html><html><head><title>Resume — HireReady</title>
+    <style>@page{size:letter;margin:0.7in;}body{font-family:Georgia,'Times New Roman',serif;line-height:1.55;color:#1a1a1a;}
+    h2{font-family:'Helvetica Neue',Arial,sans-serif;font-size:22pt;margin:0 0 2px 0;}
+    .contact{color:#555;font-size:9.5pt;margin-bottom:16px;}
+    .section-head{color:#2563eb;font-family:'Helvetica Neue',Arial,sans-serif;font-size:9.5pt;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #2563eb;padding-bottom:3px;margin:18px 0 8px 0;}
+    .exp-title{font-family:'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:11pt;}
+    .exp-company{color:#555;font-size:9.5pt;margin-bottom:4px;}
+    ul{padding-left:18px;margin:4px 0 12px;}li{font-size:10pt;margin-bottom:3px;line-height:1.45;}
+    p{font-size:10.5pt;margin:0 0 6px;}
+    .skill-pills{display:flex;flex-wrap:wrap;gap:4px;}
+    .skill-pill{background:#e8f4fd;color:#1e6fa1;padding:2px 8px;border-radius:3px;font-size:8.5pt;font-family:'Helvetica Neue',Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    </style></head><body>${el.querySelector('.resume-preview')?.innerHTML || el.innerHTML}</body></html>`);
+  }
+  w.document.close();
+  setTimeout(() => w.print(), 400);
+}
+
+// Close viewer on backdrop click
+document.addEventListener('click', (e) => {
+  const viewer = document.getElementById('docViewer');
+  if (e.target === viewer) closeDocViewer();
+});
 
 // ===================== TAILOR TO JOB (PRO) =====================
 function switchJobInput(tab) {

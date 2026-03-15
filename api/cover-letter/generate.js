@@ -71,6 +71,14 @@ Return in this exact JSON format (no markdown, no backticks):
       return res.status(502).json({ error: 'Failed to parse AI response' });
     }
 
+    // Save cover letter to DB
+    try {
+      await sql`
+        INSERT INTO ats_analyses (user_id, job_title, company_name, job_description, cover_letter, ats_score)
+        VALUES (${decoded.userId}, ${'Cover Letter'}, ${companyName || ''}, ${(jobDescription || '').substring(0, 5000)}, ${result.coverLetter}, 0)
+      `;
+    } catch(e) { console.error('Cover letter save error (non-fatal):', e); }
+
     try {
       await sql`INSERT INTO usage_log (user_id, action, details) VALUES (${decoded.userId}, 'cover_letter', ${JSON.stringify({ company: companyName })})`;
     } catch(e) {}
