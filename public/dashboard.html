@@ -735,9 +735,9 @@ textarea{min-height:120px;}
   <!-- EXPORT LANGUAGE MODAL -->
   <div id="exportLangModal" class="hidden" style="position:fixed;inset:0;background:rgba(5,10,18,0.85);z-index:300;display:flex;align-items:center;justify-content:center;">
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2rem;width:420px;max-width:90vw;text-align:center;">
-      <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;margin-bottom:0.5rem;" id="exportModalTitle">📥 Download PDF</h3>
-      <p style="color:var(--text2);margin-bottom:1.5rem;" id="exportModalDesc">Choose the language for your document</p>
-      <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1.5rem;">
+      <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;margin-bottom:0.5rem;">📥 Download PDF</h3>
+      <p style="color:var(--text2);margin-bottom:1.5rem;">Choose the language for section headers</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1rem;">
         <button class="btn btn-outline" onclick="doExport('en')" style="flex:1;justify-content:center;padding:1rem;font-size:1rem;">
           🇬🇧 English
         </button>
@@ -745,6 +745,7 @@ textarea{min-height:120px;}
           🇫🇷 Français
         </button>
       </div>
+      <p style="color:var(--text2);font-size:0.8rem;margin-bottom:1rem;">💡 For a fully translated resume, switch language (EN/FR) in the sidebar and rebuild your resume.</p>
       <div id="exportTranslating" class="hidden" style="padding:1rem;">
         <div class="spinner" style="width:24px;height:24px;margin:0 auto 0.5rem;"></div>
         <p style="color:var(--text2);font-size:0.9rem;">Translating...</p>
@@ -1428,24 +1429,24 @@ function closeExportModal() {
 async function doExport(lang) {
   if (!pendingExport) return;
 
-  // Get plain text
-  let plainText = '';
+  // Get the HTML content
+  let html = pendingExport.content || '';
+  
+  // For resume: get from the visible element
   if (pendingExport.type === 'resume') {
     const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
-    if (el) plainText = el.innerText;
+    if (el) html = el.innerHTML;
     else {
       const viewer = document.getElementById('docViewerContent');
       const rp = viewer?.querySelector('.resume-preview');
-      if (rp) plainText = rp.innerText;
-      else plainText = pendingExport.content.replace(/<[^>]+>/g, ' ');
+      if (rp) html = rp.innerHTML;
     }
-  } else {
-    plainText = pendingExport.content;
   }
 
-  // Detect language
-  const frW = (plainText.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|cette)\b/gi) || []).length;
-  const enW = (plainText.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our)\b/gi) || []).length;
+  // Detect current language of the document
+  const text = html.replace(/<[^>]+>/g, ' ');
+  const frW = (text.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|cette)\b/gi) || []).length;
+  const enW = (text.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our)\b/gi) || []).length;
   const docLang = frW > enW ? 'fr' : 'en';
 
   // Same language — direct export
@@ -1455,40 +1456,63 @@ async function doExport(lang) {
     return;
   }
 
-  // Different language — regenerate using the working generate endpoint
-  document.getElementById('exportTranslating').classList.remove('hidden');
-
-  try {
-    // Send the plain text as "experience" and let AI rebuild in target language
-    const resp = await fetch(API+'/api/resume/generate', {
-      method: 'POST', headers: headers(),
-      body: JSON.stringify({
-        mode: 'generic',
-        language: lang,
-        targetCountry: 'CA',
-        personalInfo: {
-          rawResume: plainText.substring(0, 4000)
-        }
-      })
-    });
-    const d = await resp.json();
-    if (resp.ok && d.resume) {
-      const html = buildResumeHTML(d.resume);
-      printExport({ ...pendingExport, content: html, type: 'resume' });
-      closeExportModal();
-      return;
+  // Different language — instant client-side section header translation
+  if (pendingExport.type === 'resume') {
+    let translated = html;
+    if (lang === 'fr') {
+      // EN → FR section headers
+      translated = translated
+        .replace(/>Professional Summary</gi, '>Résumé Professionnel<')
+        .replace(/>PROFESSIONAL SUMMARY</gi, '>RÉSUMÉ PROFESSIONNEL<')
+        .replace(/>Experience</gi, '>Expérience Professionnelle<')
+        .replace(/>EXPERIENCE</gi, '>EXPÉRIENCE PROFESSIONNELLE<')
+        .replace(/>Education</gi, '>Formation<')
+        .replace(/>EDUCATION</gi, '>FORMATION<')
+        .replace(/>Skills</gi, '>Compétences<')
+        .replace(/>SKILLS</gi, '>COMPÉTENCES<')
+        .replace(/>Languages</gi, '>Langues<')
+        .replace(/>LANGUAGES</gi, '>LANGUES<')
+        .replace(/>Certifications</gi, '>Certifications<')
+        .replace(/>CERTIFICATIONS</gi, '>CERTIFICATIONS<')
+        .replace(/>Work Experience</gi, '>Expérience Professionnelle<')
+        .replace(/>WORK EXPERIENCE</gi, '>EXPÉRIENCE PROFESSIONNELLE<')
+        .replace(/>Summary</gi, '>Résumé<')
+        .replace(/>SUMMARY</gi, '>RÉSUMÉ<')
+        .replace(/>References</gi, '>Références<')
+        .replace(/>REFERENCES</gi, '>RÉFÉRENCES<')
+        .replace(/>Achievements</gi, '>Réalisations<')
+        .replace(/>Projects</gi, '>Projets<')
+        .replace(/>Volunteer</gi, '>Bénévolat<')
+        .replace(/>Interests</gi, '>Intérêts<')
+        .replace(/Present</g, 'Présent');
+    } else {
+      // FR → EN section headers
+      translated = translated
+        .replace(/>Résumé Professionnel</gi, '>Professional Summary<')
+        .replace(/>RÉSUMÉ PROFESSIONNEL</gi, '>PROFESSIONAL SUMMARY<')
+        .replace(/>Expérience Professionnelle</gi, '>Experience<')
+        .replace(/>EXPÉRIENCE PROFESSIONNELLE</gi, '>EXPERIENCE<')
+        .replace(/>Expérience</gi, '>Experience<')
+        .replace(/>EXPÉRIENCE</gi, '>EXPERIENCE<')
+        .replace(/>Formation</gi, '>Education<')
+        .replace(/>FORMATION</gi, '>EDUCATION<')
+        .replace(/>Compétences</gi, '>Skills<')
+        .replace(/>COMPÉTENCES</gi, '>SKILLS<')
+        .replace(/>Langues</gi, '>Languages<')
+        .replace(/>LANGUES</gi, '>LANGUAGES<')
+        .replace(/>Réalisations</gi, '>Achievements<')
+        .replace(/>Projets</gi, '>Projects<')
+        .replace(/>Bénévolat</gi, '>Volunteer<')
+        .replace(/>Intérêts</gi, '>Interests<')
+        .replace(/>Références</gi, '>References<')
+        .replace(/Présent</g, 'Present');
     }
-    throw new Error(d.error || 'Generation failed');
-  } catch (e) {
-    console.error('Export translation error:', e);
-    document.getElementById('exportTranslating').classList.add('hidden');
-    if (confirm(currentLang==='fr'
-      ? 'La génération dans l\'autre langue a échoué. Exporter dans la langue originale ?'
-      : 'Generation in the other language failed. Export in original language?')) {
-      printExport(pendingExport);
-      closeExportModal();
-    }
+    printExport({ ...pendingExport, content: translated, type: 'resume' });
+  } else {
+    // Cover letter — export as-is (user should regenerate in target language)
+    printExport(pendingExport);
   }
+  closeExportModal();
 }
 
 function printExport(exp) {
