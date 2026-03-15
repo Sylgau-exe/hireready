@@ -484,6 +484,31 @@ textarea{min-height:120px;}
         </div>
         <div id="resumePreview" class="resume-preview"></div>
       </div>
+
+      <!-- GENERATE OTHER LANGUAGE VERSION -->
+      <div class="card no-print" id="translateResumeCard" style="text-align:center;background:rgba(129,140,248,0.05);border-color:rgba(129,140,248,0.2);">
+        <h3 style="justify-content:center;">🌐 Need This Resume in Another Language?</h3>
+        <p style="color:var(--text2);margin-bottom:1rem;">Generate a fully translated version — same content, different language.</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;">
+          <button class="btn btn-outline" onclick="generateTranslatedResume('en')" id="genEnBtn">🇬🇧 Generate in English</button>
+          <button class="btn btn-outline" onclick="generateTranslatedResume('fr')" id="genFrBtn">🇫🇷 Générer en Français</button>
+        </div>
+      </div>
+
+      <!-- TRANSLATED VERSION -->
+      <div id="translatedResult" class="hidden">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+            <h3 style="margin:0;" id="translatedTitle">🌐 Version Française</h3>
+            <div class="no-print" style="display:flex;gap:0.5rem;">
+              <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('resumePreviewTranslated').innerText).then(()=>alert('Copied!'))">📋 Copy</button>
+              <button class="btn btn-primary btn-sm" onclick="exportResumePDF('resumePreviewTranslated')">📥 Download PDF</button>
+            </div>
+          </div>
+          <div id="resumePreviewTranslated" class="resume-preview"></div>
+        </div>
+      </div>
+
       <div class="card no-print" style="text-align:center;background:rgba(56,189,248,0.05);border-color:rgba(56,189,248,0.15);">
         <h3 style="justify-content:center;">🎯 Ready to Apply for a Specific Job?</h3>
         <p style="color:var(--text2);margin-bottom:1rem;">Upgrade to Pro to tailor this resume to any job posting, get your ATS score, and generate a custom cover letter.</p>
@@ -613,6 +638,27 @@ textarea{min-height:120px;}
           <div id="resumePreview2" class="resume-preview"></div>
         </div>
 
+        <!-- Generate translated optimized resume -->
+        <div class="card no-print" style="text-align:center;background:rgba(129,140,248,0.05);border-color:rgba(129,140,248,0.2);">
+          <h3 style="justify-content:center;">🌐 Need This in Another Language?</h3>
+          <div style="display:flex;gap:0.75rem;justify-content:center;margin-top:0.75rem;">
+            <button class="btn btn-outline btn-sm" onclick="generateTranslatedOptimized('en')">🇬🇧 English Version</button>
+            <button class="btn btn-outline btn-sm" onclick="generateTranslatedOptimized('fr')">🇫🇷 Version Française</button>
+          </div>
+        </div>
+        <div id="translatedOptResult" class="hidden">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+              <h3 style="margin:0;" id="translatedOptTitle">🌐 Translated Version</h3>
+              <div class="no-print" style="display:flex;gap:0.5rem;">
+                <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('resumePreviewOpt').innerText).then(()=>alert('Copied!'))">📋 Copy</button>
+                <button class="btn btn-primary btn-sm" onclick="exportResumePDF('resumePreviewOpt')">📥 Download PDF</button>
+              </div>
+            </div>
+            <div id="resumePreviewOpt" class="resume-preview"></div>
+          </div>
+        </div>
+
         <!-- Cover Letter -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
@@ -623,6 +669,26 @@ textarea{min-height:120px;}
             </div>
           </div>
           <div id="coverLetterOutput" class="letter-output"></div>
+        </div>
+
+        <!-- Generate translated cover letter -->
+        <div class="card no-print" style="text-align:center;background:rgba(129,140,248,0.05);border-color:rgba(129,140,248,0.2);">
+          <div style="display:flex;gap:0.75rem;justify-content:center;">
+            <button class="btn btn-outline btn-sm" onclick="generateTranslatedCoverLetter('en')">🇬🇧 English Letter</button>
+            <button class="btn btn-outline btn-sm" onclick="generateTranslatedCoverLetter('fr')">🇫🇷 Lettre en Français</button>
+          </div>
+        </div>
+        <div id="translatedCLResult" class="hidden">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+              <h3 style="margin:0;" id="translatedCLTitle">🌐 Translated Letter</h3>
+              <div class="no-print" style="display:flex;gap:0.5rem;">
+                <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('coverLetterTranslated').textContent).then(()=>alert('Copied!'))">📋 Copy</button>
+                <button class="btn btn-primary btn-sm" onclick="exportCoverLetterTranslatedPDF()">📥 Download PDF</button>
+              </div>
+            </div>
+            <div id="coverLetterTranslated" class="letter-output"></div>
+          </div>
         </div>
 
         <div class="card" style="text-align:center;background:rgba(192,132,252,0.05);border-color:rgba(192,132,252,0.15);">
@@ -732,28 +798,7 @@ textarea{min-height:120px;}
     </div>
   </div>
 
-  <!-- EXPORT LANGUAGE MODAL -->
-  <div id="exportLangModal" class="hidden" style="position:fixed;inset:0;background:rgba(5,10,18,0.85);z-index:300;display:flex;align-items:center;justify-content:center;">
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:2rem;width:420px;max-width:90vw;text-align:center;">
-      <h3 style="font-family:'Fraunces',serif;font-size:1.3rem;margin-bottom:0.5rem;">📥 Download PDF</h3>
-      <p style="color:var(--text2);margin-bottom:1.5rem;">Choose the language for section headers</p>
-      <div style="display:flex;gap:0.75rem;justify-content:center;margin-bottom:1rem;">
-        <button class="btn btn-outline" onclick="doExport('en')" style="flex:1;justify-content:center;padding:1rem;font-size:1rem;">
-          🇬🇧 English
-        </button>
-        <button class="btn btn-outline" onclick="doExport('fr')" style="flex:1;justify-content:center;padding:1rem;font-size:1rem;">
-          🇫🇷 Français
-        </button>
-      </div>
-      <p style="color:var(--text2);font-size:0.8rem;margin-bottom:1rem;">💡 For a fully translated resume, switch language (EN/FR) in the sidebar and rebuild your resume.</p>
-      <div id="exportTranslating" class="hidden" style="padding:1rem;">
-        <div class="spinner" style="width:24px;height:24px;margin:0 auto 0.5rem;"></div>
-        <p style="color:var(--text2);font-size:0.9rem;">Translating...</p>
-      </div>
-      <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.85rem;font-family:inherit;" onclick="closeExportModal()">Cancel</button>
-    </div>
-  </div>
-
+  <!-- End of main content -->
 </div>
 
 <script>
@@ -1382,137 +1427,27 @@ function copyResumeText() {
   navigator.clipboard.writeText(el.innerText).then(()=>alert('Resume copied!'));
 }
 
-// ===================== PDF EXPORT WITH LANGUAGE CHOICE =====================
-let pendingExport = null; // { type: 'resume'|'cover'|'docviewer', sourceId, content, resumeData }
-
+// ===================== PDF EXPORT =====================
 function exportResumePDF(targetId) {
   const sourceId = targetId || 'resumePreview';
   const el = document.getElementById(sourceId);
   if (!el || !el.innerHTML.trim()) return alert('No resume to export');
-  pendingExport = { type: 'resume', sourceId, content: el.innerHTML };
-  showExportModal();
+  printExport({ type: 'resume', content: el.innerHTML });
 }
 
 function exportCoverLetterPDF() {
   const el = document.getElementById('coverLetterOutput');
   if (!el || !el.textContent.trim()) return alert('No cover letter to export');
-  pendingExport = { type: 'cover', content: el.textContent };
-  showExportModal();
+  printExport({ type: 'cover', content: el.textContent });
 }
 
 function exportDocViewerPDF() {
   const el = document.getElementById('docViewerContent');
   const isLetter = el.querySelector('.letter-output');
   const isResume = el.querySelector('.resume-preview');
-  if (isLetter) {
-    pendingExport = { type: 'cover', content: isLetter.textContent };
-  } else if (isResume) {
-    pendingExport = { type: 'resume', sourceId: null, content: isResume.innerHTML };
-  } else {
-    pendingExport = { type: 'raw', content: el.innerHTML };
-  }
-  showExportModal();
-}
-
-function showExportModal() {
-  document.getElementById('exportTranslating').classList.add('hidden');
-  document.getElementById('exportLangModal').classList.remove('hidden');
-  document.getElementById('exportLangModal').style.display = 'flex';
-}
-
-function closeExportModal() {
-  document.getElementById('exportLangModal').classList.add('hidden');
-  document.getElementById('exportLangModal').style.display = 'none';
-  pendingExport = null;
-}
-
-async function doExport(lang) {
-  if (!pendingExport) return;
-
-  // Get the HTML content
-  let html = pendingExport.content || '';
-  
-  // For resume: get from the visible element
-  if (pendingExport.type === 'resume') {
-    const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
-    if (el) html = el.innerHTML;
-    else {
-      const viewer = document.getElementById('docViewerContent');
-      const rp = viewer?.querySelector('.resume-preview');
-      if (rp) html = rp.innerHTML;
-    }
-  }
-
-  // Detect current language of the document
-  const text = html.replace(/<[^>]+>/g, ' ');
-  const frW = (text.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|cette)\b/gi) || []).length;
-  const enW = (text.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our)\b/gi) || []).length;
-  const docLang = frW > enW ? 'fr' : 'en';
-
-  // Same language — direct export
-  if (lang === docLang) {
-    printExport(pendingExport);
-    closeExportModal();
-    return;
-  }
-
-  // Different language — instant client-side section header translation
-  if (pendingExport.type === 'resume') {
-    let translated = html;
-    if (lang === 'fr') {
-      // EN → FR section headers
-      translated = translated
-        .replace(/>Professional Summary</gi, '>Résumé Professionnel<')
-        .replace(/>PROFESSIONAL SUMMARY</gi, '>RÉSUMÉ PROFESSIONNEL<')
-        .replace(/>Experience</gi, '>Expérience Professionnelle<')
-        .replace(/>EXPERIENCE</gi, '>EXPÉRIENCE PROFESSIONNELLE<')
-        .replace(/>Education</gi, '>Formation<')
-        .replace(/>EDUCATION</gi, '>FORMATION<')
-        .replace(/>Skills</gi, '>Compétences<')
-        .replace(/>SKILLS</gi, '>COMPÉTENCES<')
-        .replace(/>Languages</gi, '>Langues<')
-        .replace(/>LANGUAGES</gi, '>LANGUES<')
-        .replace(/>Certifications</gi, '>Certifications<')
-        .replace(/>CERTIFICATIONS</gi, '>CERTIFICATIONS<')
-        .replace(/>Work Experience</gi, '>Expérience Professionnelle<')
-        .replace(/>WORK EXPERIENCE</gi, '>EXPÉRIENCE PROFESSIONNELLE<')
-        .replace(/>Summary</gi, '>Résumé<')
-        .replace(/>SUMMARY</gi, '>RÉSUMÉ<')
-        .replace(/>References</gi, '>Références<')
-        .replace(/>REFERENCES</gi, '>RÉFÉRENCES<')
-        .replace(/>Achievements</gi, '>Réalisations<')
-        .replace(/>Projects</gi, '>Projets<')
-        .replace(/>Volunteer</gi, '>Bénévolat<')
-        .replace(/>Interests</gi, '>Intérêts<')
-        .replace(/Present</g, 'Présent');
-    } else {
-      // FR → EN section headers
-      translated = translated
-        .replace(/>Résumé Professionnel</gi, '>Professional Summary<')
-        .replace(/>RÉSUMÉ PROFESSIONNEL</gi, '>PROFESSIONAL SUMMARY<')
-        .replace(/>Expérience Professionnelle</gi, '>Experience<')
-        .replace(/>EXPÉRIENCE PROFESSIONNELLE</gi, '>EXPERIENCE<')
-        .replace(/>Expérience</gi, '>Experience<')
-        .replace(/>EXPÉRIENCE</gi, '>EXPERIENCE<')
-        .replace(/>Formation</gi, '>Education<')
-        .replace(/>FORMATION</gi, '>EDUCATION<')
-        .replace(/>Compétences</gi, '>Skills<')
-        .replace(/>COMPÉTENCES</gi, '>SKILLS<')
-        .replace(/>Langues</gi, '>Languages<')
-        .replace(/>LANGUES</gi, '>LANGUAGES<')
-        .replace(/>Réalisations</gi, '>Achievements<')
-        .replace(/>Projets</gi, '>Projects<')
-        .replace(/>Bénévolat</gi, '>Volunteer<')
-        .replace(/>Intérêts</gi, '>Interests<')
-        .replace(/>Références</gi, '>References<')
-        .replace(/Présent</g, 'Present');
-    }
-    printExport({ ...pendingExport, content: translated, type: 'resume' });
-  } else {
-    // Cover letter — export as-is (user should regenerate in target language)
-    printExport(pendingExport);
-  }
-  closeExportModal();
+  if (isLetter) printExport({ type: 'cover', content: isLetter.textContent });
+  else if (isResume) printExport({ type: 'resume', content: isResume.innerHTML });
+  else printExport({ type: 'raw', content: el.innerHTML });
 }
 
 function printExport(exp) {
@@ -1554,6 +1489,111 @@ function printExport(exp) {
 }
 
 // Store last rendered resume data for translation
+// ===================== GENERATE IN OTHER LANGUAGE =====================
+
+async function generateTranslatedResume(targetLang) {
+  const el = document.getElementById('resumePreview');
+  if (!el || !el.innerText.trim()) return alert('No resume to translate');
+
+  const langLabel = targetLang === 'fr' ? 'Version Française' : 'English Version';
+  showLoading(targetLang === 'fr' ? 'Génération du CV en français...' : 'Generating English resume...');
+
+  try {
+    const r = await fetch(API+'/api/resume/generate', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({
+        mode: 'generic',
+        language: targetLang,
+        targetCountry: 'CA',
+        personalInfo: { rawResume: el.innerText.substring(0, 4000) }
+      })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok || !d.resume) return alert(d.error || 'Generation failed');
+
+    renderResume(d.resume, 'resumePreviewTranslated');
+    document.getElementById('translatedTitle').textContent = '🌐 ' + langLabel;
+    document.getElementById('translatedResult').classList.remove('hidden');
+    document.getElementById('translatedResult').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    hideLoading();
+    alert('Failed to generate translated version');
+  }
+}
+
+async function generateTranslatedOptimized(targetLang) {
+  const el = document.getElementById('resumePreview2');
+  if (!el || !el.innerText.trim()) return alert('No resume to translate');
+
+  const langLabel = targetLang === 'fr' ? 'CV Optimisé — Français' : 'Optimized Resume — English';
+  showLoading(targetLang === 'fr' ? 'Génération du CV optimisé en français...' : 'Generating optimized English resume...');
+
+  try {
+    const jd = getJobDesc();
+    const r = await fetch(API+'/api/resume/generate', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({
+        mode: 'optimize',
+        language: targetLang,
+        jobDescription: jd,
+        existingResume: el.innerText.substring(0, 4000),
+        targetCountry: document.getElementById('tailorCountry').value
+      })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok || !d.resume) return alert(d.error || 'Generation failed');
+
+    renderResume(d.resume, 'resumePreviewOpt');
+    document.getElementById('translatedOptTitle').textContent = '🌐 ' + langLabel;
+    document.getElementById('translatedOptResult').classList.remove('hidden');
+    document.getElementById('translatedOptResult').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    hideLoading();
+    alert('Failed to generate translated version');
+  }
+}
+
+async function generateTranslatedCoverLetter(targetLang) {
+  const el = document.getElementById('coverLetterOutput');
+  if (!el || !el.textContent.trim()) return alert('No cover letter to translate');
+
+  const langLabel = targetLang === 'fr' ? 'Lettre de Motivation — Français' : 'Cover Letter — English';
+  showLoading(targetLang === 'fr' ? 'Rédaction de la lettre en français...' : 'Writing English cover letter...');
+
+  try {
+    const jd = getJobDesc();
+    const r = await fetch(API+'/api/cover-letter/generate', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({
+        jobDescription: jd,
+        companyName: document.getElementById('tailorCompany').value,
+        resumeText: document.getElementById('resumePreview2')?.innerText || '',
+        targetCountry: document.getElementById('tailorCountry').value,
+        language: targetLang
+      })
+    });
+    const d = await r.json();
+    hideLoading();
+    if (!r.ok || !d.coverLetter) return alert(d.error || 'Generation failed');
+
+    document.getElementById('coverLetterTranslated').textContent = d.coverLetter;
+    document.getElementById('translatedCLTitle').textContent = '🌐 ' + langLabel;
+    document.getElementById('translatedCLResult').classList.remove('hidden');
+    document.getElementById('translatedCLResult').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    hideLoading();
+    alert('Failed to generate translated version');
+  }
+}
+
+function exportCoverLetterTranslatedPDF() {
+  const el = document.getElementById('coverLetterTranslated');
+  if (!el || !el.textContent.trim()) return;
+  pendingExport = { type: 'cover', content: el.textContent };
+  printExport(pendingExport);
+}
 
 // ===================== FILE UPLOAD =====================
 // PDF.js worker
