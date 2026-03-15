@@ -111,7 +111,7 @@ textarea{min-height:120px;}
 .score-badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.8rem;border-radius:100px;font-weight:700;font-size:0.85rem;margin-bottom:0.75rem;}
 
 /* COVER LETTER */
-.letter-output{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:2rem;white-space:pre-wrap;line-height:1.8;font-size:0.95rem;}
+.letter-output{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:2rem;white-space:pre-wrap;line-height:1.8;font-size:0.95rem;color:var(--text);}
 
 /* RESUME PREVIEW */
 .resume-preview{background:#fff;color:#1a1a1a;border-radius:12px;padding:2.5rem;font-family:Georgia,serif;line-height:1.6;}
@@ -2081,8 +2081,15 @@ async function tailorToJob() {
       body:JSON.stringify({ jobDescription:jd, companyName, resumeText:resume, targetCountry:country, language:currentLang })
     });
     const d3 = await r3.json();
-    if (r3.ok) { document.getElementById('coverLetterOutput').textContent = d3.coverLetter; }
-  } catch(e) { /* non-fatal */ }
+    if (r3.ok && d3.coverLetter) { 
+      document.getElementById('coverLetterOutput').textContent = d3.coverLetter; 
+    } else {
+      document.getElementById('coverLetterOutput').textContent = d3.error || 'Cover letter generation failed. Please try again.';
+    }
+  } catch(e) { 
+    console.error('Cover letter error:', e);
+    document.getElementById('coverLetterOutput').textContent = 'Cover letter generation timed out. Please try again.';
+  }
 
   // Step 4: Re-analyze optimized resume (AFTER score)
   showLoading('Step 4/4 — Scoring your optimized resume...');

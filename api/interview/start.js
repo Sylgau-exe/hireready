@@ -13,8 +13,7 @@ export default async function handler(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
   const { jobDescription, jobTitle, questionCount, targetCountry, language } = req.body;
-  const langInstruction = language === 'fr' ? '
-IMPORTANT: Generate ALL questions, hints, sample answers and tips in FRENCH.' : '';
+  const langInstruction = language === 'fr' ? '\nIMPORTANT: Generate ALL questions, hints, sample answers and tips in FRENCH.' : '';
   if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
   const count = Math.min(questionCount || 8, 15);

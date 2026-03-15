@@ -13,8 +13,7 @@ export default async function handler(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
   const { sessionId, questionNumber, question, questionType, userAnswer, jobTitle, voiceMetrics, language } = req.body;
-  const langInstruction = language === 'fr' ? '
-IMPORTANT: Write ALL feedback, suggestions and tips in FRENCH.' : '';
+  const langInstruction = language === 'fr' ? '\nIMPORTANT: Write ALL feedback, suggestions and tips in FRENCH.' : '';
   if (!question || !userAnswer) return res.status(400).json({ error: 'Question and answer are required' });
 
   // voiceMetrics: { durationSec, wordCount, wordsPerMinute, fillerWords, fillerCount, wasSpoken }

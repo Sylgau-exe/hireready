@@ -13,8 +13,7 @@ export default async function handler(req, res) {
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
   const { resumeText, jobDescription, companyName, targetCountry, tone, language } = req.body;
-  const langInstruction = language === 'fr' ? '
-IMPORTANT: Write the ENTIRE cover letter in FRENCH (Canadian French).' : '';
+  const langInstruction = language === 'fr' ? '\nIMPORTANT: Write the ENTIRE cover letter in FRENCH (Canadian French).' : '';
   if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
   try {
