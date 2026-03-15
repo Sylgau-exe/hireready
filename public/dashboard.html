@@ -539,12 +539,23 @@ textarea{min-height:120px;}
 
       <div class="card">
         <h3>📄 Your Resume</h3>
-        <p style="color:var(--text2);margin-bottom:1rem;">Paste your current resume text below.</p>
-        <div id="tailorAutoFill" class="hidden" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-size:0.9rem;">✅ You have a resume from Step 1</span>
-          <button class="btn btn-outline btn-sm" onclick="useSavedResume()">Use It</button>
+        <div class="input-method" style="margin-bottom:1rem;">
+          <button class="active" onclick="switchResumeSource('saved')">📁 Pick from My Documents</button>
+          <button onclick="switchResumeSource('paste')">📋 Paste Text</button>
         </div>
-        <div class="form-group"><textarea id="tailorResume" style="min-height:200px;" placeholder="Paste your resume text here..."></textarea></div>
+
+        <!-- PICK FROM SAVED -->
+        <div id="resumeSource-saved">
+          <div id="savedResumesList" style="margin-bottom:1rem;">
+            <p style="color:var(--text2);font-size:0.9rem;">Loading your resumes...</p>
+          </div>
+        </div>
+
+        <!-- PASTE -->
+        <div id="resumeSource-paste" class="hidden">
+          <div class="form-group"><textarea id="tailorResume" style="min-height:200px;" placeholder="Paste your resume text here..."></textarea></div>
+        </div>
+
         <button class="btn btn-primary" onclick="tailorToJob()">🚀 Tailor Resume + ATS Score + Cover Letter</button>
       </div>
 
@@ -736,19 +747,111 @@ function showPage(page) {
     const pages=['home','docs','resume','tailor','interview'];
     n.classList.toggle('active', pages[i]===page);
   });
-  // Show auto-fill hint on tailor page if we have a saved resume
-  if (page === 'tailor' && savedResumeText && savedResumeText.length > 50) {
-    document.getElementById('tailorAutoFill').classList.remove('hidden');
-    document.getElementById('tailorAutoFill').style.display = 'flex';
-  }
+  // Load saved resumes when opening tailor page
+  if (page === 'tailor') loadSavedResumes();
   // Load documents when switching to docs page
   if (page === 'docs') loadDocuments();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function useSavedResume() {
-  document.getElementById('tailorResume').value = savedResumeText;
-  document.getElementById('tailorAutoFill').style.display = 'none';
+// Resume source switching on Tailor page
+let selectedResumeText = '';
+
+function switchResumeSource(source) {
+  document.querySelectorAll('#page-tailor .card:has(#resumeSource-saved) .input-method button').forEach((b,i) => {
+    b.classList.toggle('active', (source==='saved'&&i===0)||(source==='paste'&&i===1));
+  });
+  document.getElementById('resumeSource-saved').classList.toggle('hidden', source!=='saved');
+  document.getElementById('resumeSource-paste').classList.toggle('hidden', source!=='paste');
+}
+
+async function loadSavedResumes() {
+  const container = document.getElementById('savedResumesList');
+  container.innerHTML = '<p style="color:var(--text2);font-size:0.9rem;">Loading your resumes...</p>';
+  try {
+    const r = await fetch(API+'/api/documents/list', { headers:headers() });
+    const d = await r.json();
+    if (!r.ok) throw new Error();
+
+    const resumes = d.resumes || [];
+    if (resumes.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:2rem;background:var(--bg);border-radius:12px;border:1px dashed var(--border);">
+        <p style="color:var(--text2);margin-bottom:1rem;">No saved resumes yet.</p>
+        <button class="btn btn-outline btn-sm" onclick="showPage('resume')">📄 Build a Resume First</button>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = resumes.map(res => {
+      const date = new Date(res.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+      const isOptimized = res.title?.toLowerCase().includes('optimized');
+      const badge = isOptimized ? '<span class="tier-badge tier-pro" style="position:static;font-size:0.6rem;">OPTIMIZED</span>' : '<span class="tier-badge tier-free" style="position:static;font-size:0.6rem;">GENERIC</span>';
+      const isSelected = selectedResumeText && selectedResumeText === String(res.id);
+      return `<div class="resume-pick-card" data-id="${res.id}" onclick="selectSavedResume(${res.id})" style="padding:1rem;background:${isSelected?'rgba(56,189,248,0.1)':'var(--bg)'};border:1px solid ${isSelected?'var(--accent)':'var(--border)'};border-radius:10px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:1.3rem;">${isOptimized?'🎯':'📄'}</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;">${res.title||'Resume'} ${badge}</div>
+            <div style="color:var(--text2);font-size:0.8rem;">${res.full_name||''} · ${date}</div>
+          </div>
+        </div>
+        <div class="resume-pick-check" style="width:22px;height:22px;border-radius:50%;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--accent);">${isSelected?'✓':''}</div>
+      </div>`;
+    }).join('');
+
+    // Store resume data for later
+    window._savedResumesData = resumes;
+  } catch(e) {
+    console.error('Load saved resumes error:', e);
+    container.innerHTML = '<p style="color:var(--danger);font-size:0.9rem;">Failed to load resumes. Try pasting instead.</p>';
+  }
+}
+
+function selectSavedResume(id) {
+  selectedResumeText = String(id);
+  // Update UI
+  document.querySelectorAll('.resume-pick-card').forEach(card => {
+    const isThis = card.dataset.id === String(id);
+    card.style.background = isThis ? 'rgba(56,189,248,0.1)' : 'var(--bg)';
+    card.style.borderColor = isThis ? 'var(--accent)' : '';
+    card.querySelector('.resume-pick-check').innerHTML = isThis ? '✓' : '';
+    card.querySelector('.resume-pick-check').style.borderColor = isThis ? 'var(--accent)' : 'var(--border)';
+  });
+}
+
+function getSelectedResumeText() {
+  // Check if using saved resume
+  if (!document.getElementById('resumeSource-saved').classList.contains('hidden') && selectedResumeText) {
+    const res = (window._savedResumesData || []).find(r => String(r.id) === selectedResumeText);
+    if (res) {
+      // Build text from stored resume data
+      let text = '';
+      if (res.full_name) text += res.full_name + '\n';
+      if (res.email) text += res.email + '\n';
+      if (res.phone) text += res.phone + '\n';
+      if (res.location) text += res.location + '\n';
+      if (res.summary) text += '\n' + res.summary + '\n';
+      if (res.experience?.length) {
+        text += '\nEXPERIENCE\n';
+        res.experience.forEach(e => {
+          if (typeof e === 'string') { text += e + '\n'; }
+          else { text += `${e.title||''}, ${e.company||''}, ${e.location||''}, ${e.startDate||e.start_date||''} – ${e.endDate||e.end_date||''}\n${(e.bullets||[]).map(b=>'- '+b).join('\n')}\n\n`; }
+        });
+      }
+      if (res.education?.length) {
+        text += '\nEDUCATION\n';
+        res.education.forEach(e => {
+          if (typeof e === 'string') { text += e + '\n'; }
+          else { text += `${e.degree||''}, ${e.school||''}, ${e.year||''}\n`; }
+        });
+      }
+      if (res.skills?.length) text += '\nSKILLS\n' + res.skills.join(', ') + '\n';
+      if (res.languages?.length) text += '\nLANGUAGES\n' + res.languages.join(', ') + '\n';
+      return text;
+    }
+  }
+  // Fallback to pasted text or in-memory
+  return document.getElementById('tailorResume').value || savedResumeText;
 }
 
 function upgradeTo(plan) {
@@ -1306,9 +1409,9 @@ function getJobDesc() {
 
 async function tailorToJob() {
   const jd = getJobDesc();
-  const resume = document.getElementById('tailorResume').value || savedResumeText;
+  const resume = getSelectedResumeText();
   if (!jd) return alert('Please provide the job description');
-  if (!resume || resume.length < 50) return alert('Please paste your resume');
+  if (!resume || resume.length < 50) return alert('Please select a resume from your documents or paste one');
 
   const country = document.getElementById('tailorCountry').value;
 
