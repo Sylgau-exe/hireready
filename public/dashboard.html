@@ -1428,56 +1428,65 @@ function closeExportModal() {
 async function doExport(lang) {
   if (!pendingExport) return;
 
-  // Detect current document language (rough heuristic)
-  const text = pendingExport.content || '';
-  const frWords = (text.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|vous|cette|ces)\b/gi) || []).length;
-  const enWords = (text.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our|your)\b/gi) || []).length;
+  // Get the plain text of the document
+  let plainText = '';
+  if (pendingExport.type === 'resume') {
+    const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
+    plainText = el ? el.innerText : pendingExport.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  } else {
+    plainText = pendingExport.content;
+  }
+
+  // Detect current document language
+  const frWords = (plainText.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|cette)\b/gi) || []).length;
+  const enWords = (plainText.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our)\b/gi) || []).length;
   const docLang = frWords > enWords ? 'fr' : 'en';
 
-  // If same language, export directly
+  // Same language — export directly, no translation needed
   if (lang === docLang) {
     printExport(pendingExport);
     closeExportModal();
     return;
   }
 
-  // Need translation
+  // Need translation — call API with plain text
   document.getElementById('exportTranslating').classList.remove('hidden');
 
   try {
-    let body;
-    if (pendingExport.type === 'resume') {
-      // Try to find structured resume data from last render
-      const resumeData = window._lastResumeForExport || null;
-      if (resumeData) {
-        body = { content: resumeData, contentType: 'resume_json', targetLang: lang };
-      } else {
-        // Fall back to translating HTML text
-        const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
-        const plainText = el ? el.innerText : text.replace(/<[^>]+>/g, ' ');
-        body = { content: plainText, contentType: 'cover_letter', targetLang: lang };
-      }
-    } else {
-      body = { content: pendingExport.content, contentType: 'cover_letter', targetLang: lang };
-    }
-
     const r = await fetch(API+'/api/documents/translate', {
       method: 'POST', headers: headers(),
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        text: plainText,
+        targetLang: lang,
+        docType: pendingExport.type === 'resume' ? 'resume' : 'cover_letter'
+      })
     });
     const d = await r.json();
 
-    if (!r.ok) {
-      alert(d.error || 'Translation failed. Exporting in original language.');
+    if (!r.ok || !d.translated) {
+      alert('Translation failed. Exporting in original language.');
       printExport(pendingExport);
       closeExportModal();
       return;
     }
 
-    if (d.contentType === 'resume_json' && d.translated) {
-      // Re-render translated resume
-      const translatedHtml = buildResumeHTML(d.translated);
-      printExport({ ...pendingExport, content: translatedHtml, type: 'resume' });
+    // For resumes: wrap translated text in basic HTML structure
+    if (pendingExport.type === 'resume') {
+      const lines = d.translated.split('\n');
+      let html = '';
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) { html += '<br>'; return; }
+        // Detect section headers (ALL CAPS or known patterns)
+        if (trimmed === trimmed.toUpperCase() && trimmed.length > 3 && trimmed.length < 60 && !trimmed.startsWith('-') && !trimmed.startsWith('•')) {
+          html += `<div class="section-head">${trimmed}</div>`;
+        } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('– ')) {
+          html += `<li style="font-size:10pt;margin-bottom:3px;margin-left:18px;">${trimmed.substring(2)}</li>`;
+        } else {
+          html += `<p>${trimmed}</p>`;
+        }
+      });
+      printExport({ ...pendingExport, content: html, type: 'resume' });
     } else {
       printExport({ ...pendingExport, content: d.translated, type: 'cover' });
     }
@@ -1529,8 +1538,6 @@ function printExport(exp) {
 }
 
 // Store last rendered resume data for translation
-const _origRenderResume = renderResume;
-// We'll capture in renderResume below
 
 // ===================== FILE UPLOAD =====================
 // PDF.js worker

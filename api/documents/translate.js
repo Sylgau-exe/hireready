@@ -1,4 +1,4 @@
-// api/documents/translate.js - Translate resume or cover letter to another language
+// api/documents/translate.js - Translate resume or cover letter text
 import { getUserFromRequest, cors } from '../../lib/auth.js';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -11,39 +11,23 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { content, contentType, targetLang } = req.body;
-  // contentType: 'resume_json' or 'cover_letter'
-  // targetLang: 'en' or 'fr'
+  const { text, targetLang, docType } = req.body;
 
-  if (!content || !targetLang) {
-    return res.status(400).json({ error: 'Content and target language are required' });
+  if (!text || !targetLang) {
+    return res.status(400).json({ error: 'Text and target language required' });
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured' });
   }
 
   const langName = targetLang === 'fr' ? 'French (Canadian French)' : 'English';
+  const truncated = text.substring(0, 6000);
 
   try {
-    let prompt;
-
-    if (contentType === 'resume_json') {
-      prompt = `You are an expert bilingual translator specializing in professional resumes.
-
-Translate the following resume JSON into ${langName}. Translate ALL text fields: summary, job titles, bullet points, degree names, skill descriptions. Keep proper nouns (company names, school names, city names) unchanged. Keep the JSON structure exactly the same.
-
-RESUME JSON:
-${typeof content === 'string' ? content : JSON.stringify(content, null, 2)}
-
-Return the translated resume in the EXACT same JSON format (no markdown, no backticks, just pure JSON). Every text field must be in ${langName}.`;
-    } else {
-      // Cover letter
-      prompt = `You are an expert bilingual translator specializing in professional correspondence.
-
-Translate the following cover letter into ${langName}. Maintain the professional tone, formatting, and paragraph structure. Keep proper nouns (company names, people names) unchanged.
-
-COVER LETTER:
-${content}
-
-Return ONLY the translated cover letter text. No explanation, no markdown, just the translated letter.`;
-    }
+    const prompt = docType === 'resume'
+      ? `Translate this resume into ${langName}. Keep the exact same structure and formatting. Keep proper nouns (company names, school names, cities) unchanged. Translate job titles, bullet points, summary, skills, and section headers.\n\nRESUME:\n${truncated}\n\nReturn ONLY the translated resume text, preserving all line breaks and formatting. No explanation.`
+      : `Translate this cover letter into ${langName}. Maintain the professional tone and paragraph structure. Keep proper nouns unchanged.\n\nCOVER LETTER:\n${truncated}\n\nReturn ONLY the translated text. No explanation.`;
 
     const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -60,22 +44,19 @@ Return ONLY the translated cover letter text. No explanation, no markdown, just 
     });
 
     if (!aiResponse.ok) {
-      return res.status(502).json({ error: 'Translation failed' });
+      const errText = await aiResponse.text();
+      console.error('Anthropic translate error:', errText);
+      return res.status(502).json({ error: 'Translation API failed' });
     }
 
     const aiData = await aiResponse.json();
-    const text = aiData.content[0].text;
+    const translated = aiData.content[0]?.text?.trim();
 
-    if (contentType === 'resume_json') {
-      try {
-        const translated = JSON.parse(text.replace(/```json|```/g, '').trim());
-        return res.json({ success: true, translated, contentType });
-      } catch (e) {
-        return res.status(502).json({ error: 'Failed to parse translated resume' });
-      }
-    } else {
-      return res.json({ success: true, translated: text.trim(), contentType });
+    if (!translated) {
+      return res.status(502).json({ error: 'Empty translation' });
     }
+
+    return res.json({ success: true, translated });
   } catch (error) {
     console.error('Translation error:', error);
     return res.status(500).json({ error: 'Translation failed' });
