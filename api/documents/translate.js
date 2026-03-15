@@ -1,4 +1,4 @@
-// api/documents/translate.js - Translate resume or cover letter text
+// api/documents/translate.js - Fast translation for PDF export
 import { getUserFromRequest, cors } from '../../lib/auth.js';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -9,27 +9,18 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const decoded = getUserFromRequest(req);
-  if (!decoded) return res.status(401).json({ error: 'Authentication required' });
+  if (!decoded) return res.status(401).json({ error: 'Auth required' });
 
-  const { text, targetLang, docType } = req.body;
+  const { text, targetLang } = req.body;
+  if (!text || !targetLang) return res.status(400).json({ error: 'Missing params' });
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'No API key' });
 
-  if (!text || !targetLang) {
-    return res.status(400).json({ error: 'Text and target language required' });
-  }
-
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'API key not configured' });
-  }
-
-  const langName = targetLang === 'fr' ? 'French (Canadian French)' : 'English';
-  const truncated = text.substring(0, 6000);
+  const lang = targetLang === 'fr' ? 'Canadian French' : 'English';
+  // Aggressive truncation for speed
+  const input = text.substring(0, 3500);
 
   try {
-    const prompt = docType === 'resume'
-      ? `Translate this resume into ${langName}. Keep the exact same structure and formatting. Keep proper nouns (company names, school names, cities) unchanged. Translate job titles, bullet points, summary, skills, and section headers.\n\nRESUME:\n${truncated}\n\nReturn ONLY the translated resume text, preserving all line breaks and formatting. No explanation.`
-      : `Translate this cover letter into ${langName}. Maintain the professional tone and paragraph structure. Keep proper nouns unchanged.\n\nCOVER LETTER:\n${truncated}\n\nReturn ONLY the translated text. No explanation.`;
-
-    const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,27 +29,23 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }]
+        max_tokens: 2500,
+        messages: [{ role: 'user', content: `Translate to ${lang}. Keep names/companies/cities unchanged. Output ONLY translated text:\n\n${input}` }]
       })
     });
 
-    if (!aiResponse.ok) {
-      const errText = await aiResponse.text();
-      console.error('Anthropic translate error:', errText);
-      return res.status(502).json({ error: 'Translation API failed' });
+    if (!r.ok) {
+      console.error('Translate API status:', r.status);
+      return res.status(502).json({ error: 'API error' });
     }
 
-    const aiData = await aiResponse.json();
-    const translated = aiData.content[0]?.text?.trim();
+    const d = await r.json();
+    const out = d.content?.[0]?.text?.trim();
+    if (!out) return res.status(502).json({ error: 'Empty' });
 
-    if (!translated) {
-      return res.status(502).json({ error: 'Empty translation' });
-    }
-
-    return res.json({ success: true, translated });
-  } catch (error) {
-    console.error('Translation error:', error);
-    return res.status(500).json({ error: 'Translation failed' });
+    return res.json({ success: true, translated: out });
+  } catch (e) {
+    console.error('Translate err:', e.message);
+    return res.status(500).json({ error: e.message });
   }
 }

@@ -1428,63 +1428,48 @@ function closeExportModal() {
 async function doExport(lang) {
   if (!pendingExport) return;
 
-  // Get the plain text of the document
+  // Get plain text
   let plainText = '';
   if (pendingExport.type === 'resume') {
     const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
-    plainText = el ? el.innerText : pendingExport.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    plainText = el ? el.innerText : pendingExport.content.replace(/<[^>]+>/g, ' ');
   } else {
     plainText = pendingExport.content;
   }
 
-  // Detect current document language
-  const frWords = (plainText.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|cette)\b/gi) || []).length;
-  const enWords = (plainText.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our)\b/gi) || []).length;
-  const docLang = frWords > enWords ? 'fr' : 'en';
+  // Detect language
+  const frW = (plainText.match(/\b(le|la|les|des|une|est|sont|pour|dans|avec|qui|que|sur|nous|cette)\b/gi) || []).length;
+  const enW = (plainText.match(/\b(the|and|for|with|that|this|are|was|has|have|from|been|will|our)\b/gi) || []).length;
+  const docLang = frW > enW ? 'fr' : 'en';
 
-  // Same language — export directly, no translation needed
+  // Same language — direct export
   if (lang === docLang) {
     printExport(pendingExport);
     closeExportModal();
     return;
   }
 
-  // Need translation — call API with plain text
+  // Translate via server
   document.getElementById('exportTranslating').classList.remove('hidden');
-
   try {
     const r = await fetch(API+'/api/documents/translate', {
       method: 'POST', headers: headers(),
-      body: JSON.stringify({
-        text: plainText,
-        targetLang: lang,
-        docType: pendingExport.type === 'resume' ? 'resume' : 'cover_letter'
-      })
+      body: JSON.stringify({ text: plainText.substring(0, 3500), targetLang: lang })
     });
     const d = await r.json();
+    if (!r.ok || !d.translated) throw new Error(d.error || 'Failed');
 
-    if (!r.ok || !d.translated) {
-      alert('Translation failed. Exporting in original language.');
-      printExport(pendingExport);
-      closeExportModal();
-      return;
-    }
-
-    // For resumes: wrap translated text in basic HTML structure
     if (pendingExport.type === 'resume') {
-      const lines = d.translated.split('\n');
+      // Format translated text
       let html = '';
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (!trimmed) { html += '<br>'; return; }
-        // Detect section headers (ALL CAPS or known patterns)
-        if (trimmed === trimmed.toUpperCase() && trimmed.length > 3 && trimmed.length < 60 && !trimmed.startsWith('-') && !trimmed.startsWith('•')) {
-          html += `<div class="section-head">${trimmed}</div>`;
-        } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('– ')) {
-          html += `<li style="font-size:10pt;margin-bottom:3px;margin-left:18px;">${trimmed.substring(2)}</li>`;
-        } else {
-          html += `<p>${trimmed}</p>`;
-        }
+      d.translated.split('\n').forEach(line => {
+        const t = line.trim();
+        if (!t) { html += '<br>'; return; }
+        if (t === t.toUpperCase() && t.length > 3 && t.length < 60 && !t.startsWith('-')) {
+          html += `<div class="section-head">${t}</div>`;
+        } else if (/^[-•–]\s/.test(t)) {
+          html += `<li style="font-size:10pt;margin-bottom:3px;margin-left:18px;">${t.replace(/^[-•–]\s/,'')}</li>`;
+        } else { html += `<p>${t}</p>`; }
       });
       printExport({ ...pendingExport, content: html, type: 'resume' });
     } else {
@@ -1493,9 +1478,13 @@ async function doExport(lang) {
     closeExportModal();
   } catch (e) {
     console.error('Translation error:', e);
-    alert('Translation failed. Exporting in original language.');
-    printExport(pendingExport);
-    closeExportModal();
+    document.getElementById('exportTranslating').classList.add('hidden');
+    if (confirm(currentLang==='fr'
+      ? 'La traduction a échoué (délai serveur). Voulez-vous exporter dans la langue originale ?'
+      : 'Translation timed out. Export in original language instead?')) {
+      printExport(pendingExport);
+      closeExportModal();
+    }
   }
 }
 
