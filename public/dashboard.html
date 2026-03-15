@@ -1449,39 +1449,55 @@ async function doExport(lang) {
     return;
   }
 
-  // Translate via server
+  // Different language — regenerate resume in target language using working endpoint
   document.getElementById('exportTranslating').classList.remove('hidden');
-  try {
-    const r = await fetch(API+'/api/resume/generate', {
-      method: 'POST', headers: headers(),
-      body: JSON.stringify({ mode: 'translate', translateText: plainText.substring(0, 3000), translateLang: lang })
-    });
-    const d = await r.json();
-    if (!r.ok || !d.translated) throw new Error(d.error || 'Failed');
 
-    if (pendingExport.type === 'resume') {
-      // Format translated text
-      let html = '';
-      d.translated.split('\n').forEach(line => {
-        const t = line.trim();
-        if (!t) { html += '<br>'; return; }
-        if (t === t.toUpperCase() && t.length > 3 && t.length < 60 && !t.startsWith('-')) {
-          html += `<div class="section-head">${t}</div>`;
-        } else if (/^[-•–]\s/.test(t)) {
-          html += `<li style="font-size:10pt;margin-bottom:3px;margin-left:18px;">${t.replace(/^[-•–]\s/,'')}</li>`;
-        } else { html += `<p>${t}</p>`; }
+  try {
+    if (pendingExport.type === 'resume' && window._lastResumeForExport) {
+      // We have structured data — regenerate in target language
+      const r = window._lastResumeForExport;
+      const expText = (r.experience||[]).map(e => {
+        if (typeof e === 'string') return e;
+        return `${e.title||''}, ${e.company||''}, ${e.location||''}, ${e.startDate||''} – ${e.endDate||''}\n${(e.bullets||[]).map(b=>'- '+b).join('\n')}`;
+      }).join('\n\n');
+      const eduText = (r.education||[]).map(e => typeof e === 'string' ? e : `${e.degree||''}, ${e.school||''}, ${e.year||''}`).join('\n');
+
+      const resp = await fetch(API+'/api/resume/generate', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({
+          mode: 'generic',
+          language: lang,
+          targetCountry: 'CA',
+          personalInfo: {
+            name: r.fullName || r.full_name || '',
+            email: r.email || '',
+            phone: r.phone || '',
+            location: r.location || '',
+            linkedin: r.linkedinUrl || r.linkedin_url || '',
+            experience: expText,
+            education: eduText,
+            skills: (r.skills||[]).join(', '),
+            languages: (r.languages||[]).join(', ')
+          }
+        })
       });
-      printExport({ ...pendingExport, content: html, type: 'resume' });
-    } else {
-      printExport({ ...pendingExport, content: d.translated, type: 'cover' });
+      const d = await resp.json();
+      if (resp.ok && d.resume) {
+        const html = buildResumeHTML(d.resume);
+        printExport({ ...pendingExport, content: html, type: 'resume' });
+        closeExportModal();
+        return;
+      }
     }
-    closeExportModal();
+
+    // Fallback for cover letters or if resume regen fails — export original
+    throw new Error('Regen failed');
   } catch (e) {
-    console.error('Translation error:', e);
+    console.error('Export translation error:', e);
     document.getElementById('exportTranslating').classList.add('hidden');
     if (confirm(currentLang==='fr'
-      ? 'La traduction a échoué (délai serveur). Voulez-vous exporter dans la langue originale ?'
-      : 'Translation timed out. Export in original language instead?')) {
+      ? 'La génération dans l\'autre langue a échoué. Exporter dans la langue originale ?'
+      : 'Generation in the other language failed. Export in original language?')) {
       printExport(pendingExport);
       closeExportModal();
     }
