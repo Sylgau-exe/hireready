@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   const adminCheck = await sql`SELECT is_admin FROM users WHERE id = ${decoded.userId}`;
   if (!adminCheck.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
-  const { userId, name, email, organization, jobTitle, isAdmin } = req.body;
+  const { userId, name, email, organization, jobTitle, isAdmin, plan } = req.body;
   if (!userId) return res.status(400).json({ error: 'User ID required' });
 
   // Prevent removing own admin
@@ -29,9 +29,10 @@ export default async function handler(req, res) {
         organization = COALESCE(${organization || null}, organization),
         job_title = COALESCE(${jobTitle || null}, job_title),
         is_admin = COALESCE(${isAdmin}, is_admin),
+        plan = COALESCE(${plan || null}, plan),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ${userId}
-      RETURNING id, name, email, is_admin
+      RETURNING id, name, email, is_admin, plan
     `;
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json({ success: true, user: result.rows[0] });
