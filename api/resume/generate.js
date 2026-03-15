@@ -12,9 +12,35 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { mode, jobDescription, targetCountry, personalInfo, existingResume, language } = req.body;
-  // mode: 'generic' (free, no JD), 'create' (from scratch with JD), or 'optimize' (existing resume with JD)
+  const { mode, jobDescription, targetCountry, personalInfo, existingResume, language, translateText, translateLang } = req.body;
+  // mode: 'generic', 'create', 'optimize', or 'translate'
   const langInstruction = language === 'fr' ? '\n\nIMPORTANT: Generate ALL content (summary, bullet points, tips) in FRENCH (Canadian French).' : '';
+
+  // TRANSLATE MODE — quick translation, reuses this working endpoint
+  if (mode === 'translate') {
+    if (!translateText || !translateLang) return res.status(400).json({ error: 'Text and target language required' });
+    const lang = translateLang === 'fr' ? 'Canadian French' : 'English';
+    const input = translateText.substring(0, 3000);
+    try {
+      const tr = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2500,
+          messages: [{ role: 'user', content: `Translate to ${lang}. Keep proper nouns (names, companies, cities, schools) unchanged. Output ONLY the translated text, nothing else:\n\n${input}` }]
+        })
+      });
+      if (!tr.ok) return res.status(502).json({ error: 'Translation API failed' });
+      const td = await tr.json();
+      const out = td.content?.[0]?.text?.trim();
+      if (!out) return res.status(502).json({ error: 'Empty translation' });
+      return res.json({ success: true, translated: out });
+    } catch(e) {
+      console.error('Translate error:', e);
+      return res.status(500).json({ error: 'Translation failed' });
+    }
+  }
 
   if (mode !== 'generic' && !jobDescription) return res.status(400).json({ error: 'Job description is required' });
 

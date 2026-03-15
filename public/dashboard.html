@@ -1452,9 +1452,9 @@ async function doExport(lang) {
   // Translate via server
   document.getElementById('exportTranslating').classList.remove('hidden');
   try {
-    const r = await fetch(API+'/api/documents/translate', {
+    const r = await fetch(API+'/api/resume/generate', {
       method: 'POST', headers: headers(),
-      body: JSON.stringify({ text: plainText.substring(0, 3500), targetLang: lang })
+      body: JSON.stringify({ mode: 'translate', translateText: plainText.substring(0, 3000), translateLang: lang })
     });
     const d = await r.json();
     if (!r.ok || !d.translated) throw new Error(d.error || 'Failed');
