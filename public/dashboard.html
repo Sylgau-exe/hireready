@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HireReady — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
 :root {
   --bg:#050a12; --bg2:#0b1120; --bg3:#111827; --card:#141c2e;
@@ -148,7 +150,46 @@ textarea{min-height:120px;}
 .input-method button{padding:0.5rem 1rem;border-radius:8px;font-size:0.85rem;font-weight:500;cursor:pointer;background:transparent;color:var(--text2);border:1px solid var(--border);transition:all 0.2s;font-family:inherit;}
 .input-method button.active{background:rgba(56,189,248,0.1);color:var(--accent);border-color:rgba(56,189,248,0.3);}
 
+/* FILE UPLOAD */
+.upload-zone{border:2px dashed var(--border);border-radius:16px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--bg);}
+.upload-zone:hover{border-color:var(--accent);background:rgba(56,189,248,0.03);}
+.upload-zone.dragover{border-color:var(--accent);background:rgba(56,189,248,0.06);transform:scale(1.01);}
+.upload-zone .upload-icon{font-size:2.5rem;margin-bottom:0.75rem;}
+.upload-zone p{color:var(--text2);font-size:0.9rem;}
+.upload-zone .formats{font-size:0.8rem;color:var(--text2);margin-top:0.5rem;opacity:0.7;}
+.upload-progress{margin-top:1rem;display:none;}
+.upload-progress .progress-bar{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+.upload-progress .progress-fill{height:100%;background:var(--gradient);border-radius:3px;transition:width 0.3s;width:0%;}
+.upload-progress .progress-text{font-size:0.8rem;color:var(--text2);margin-top:0.5rem;}
+.parsed-preview{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-top:1.5rem;}
+.parsed-field{margin-bottom:0.75rem;}
+.parsed-field label{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent);font-weight:600;margin-bottom:0.2rem;}
+.parsed-field .value{font-size:0.9rem;color:var(--text);line-height:1.5;}
+
 .hidden{display:none!important;}
+
+/* PRINT CSS */
+@media print {
+  body{background:#fff!important;color:#000!important;display:block!important;}
+  .sidebar,.nav-item,.loading-overlay,.step-flow,.stats-row,.no-print,.btn,.input-method,
+  .upgrade-gate,.page-header,.card>h3,.voice-area,.voice-stats,.feedback-card,.q-hint,
+  .tier-badge,.user-plan,.user-info{display:none!important;}
+  .main{margin-left:0!important;padding:0!important;}
+  .card{background:none!important;border:none!important;padding:0!important;margin:0!important;box-shadow:none!important;}
+  .resume-preview{padding:0!important;border-radius:0!important;box-shadow:none!important;}
+  .resume-preview h2{font-size:20pt!important;}
+  .resume-preview .contact{font-size:10pt!important;}
+  .resume-preview .section-head{font-size:10pt!important;color:#2563eb!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .resume-preview .exp-title{font-size:11pt!important;}
+  .resume-preview li{font-size:10pt!important;}
+  .skill-pill{-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:9pt!important;}
+  .letter-output{padding:0!important;border:none!important;font-size:11pt!important;white-space:pre-wrap!important;}
+  .hidden{display:block!important;}
+  #resumeResult,#tailorResults{display:block!important;}
+  @page{size:letter;margin:0.7in;}
+  h1,h2,h3,h4{page-break-after:avoid;break-after:avoid;}
+  .resume-preview>div{page-break-inside:avoid;break-inside:avoid;}
+}
 
 @media(max-width:768px){
   .sidebar{width:60px;padding:1rem 0.5rem;}
@@ -248,7 +289,8 @@ textarea{min-height:120px;}
 
     <div class="input-method">
       <button class="active" onclick="switchResumeTab('create')">Create from Scratch</button>
-      <button onclick="switchResumeTab('upload')">Paste Existing Resume</button>
+      <button onclick="switchResumeTab('upload')">Paste Existing</button>
+      <button onclick="switchResumeTab('file')">📎 Upload File</button>
     </div>
 
     <!-- CREATE -->
@@ -290,7 +332,7 @@ textarea{min-height:120px;}
       <button class="btn btn-primary" onclick="generateGenericResume()">✨ Build My Resume — Free</button>
     </div>
 
-    <!-- UPLOAD -->
+    <!-- UPLOAD TEXT -->
     <div id="resume-upload" class="hidden">
       <div class="card">
         <h3>📋 Paste Your Existing Resume</h3>
@@ -307,19 +349,70 @@ textarea{min-height:120px;}
       </div>
     </div>
 
+    <!-- UPLOAD FILE -->
+    <div id="resume-file" class="hidden">
+      <div class="card">
+        <h3>📎 Upload Your Resume File</h3>
+        <p style="color:var(--text2);margin-bottom:1rem;">Upload your PDF or Word document. We'll extract the content, figure out what goes where, and build a polished resume.</p>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📄</div>
+          <p><strong>Click to upload</strong> or drag & drop your resume</p>
+          <div class="formats">Supports: PDF, DOCX, DOC, TXT</div>
+          <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" style="display:none" onchange="handleFileUpload(this)">
+        </div>
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-text" id="progressText">Processing...</div>
+        </div>
+
+        <!-- Parsed Result Preview -->
+        <div id="parsedPreview" class="hidden">
+          <div class="parsed-preview">
+            <h3 style="margin-bottom:1rem;">📋 Extracted Information</h3>
+            <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1rem;">Review what we found. You can edit any field before generating your resume.</p>
+            <div class="form-row">
+              <div class="form-group"><label>Full Name</label><input type="text" id="pName"></div>
+              <div class="form-group"><label>Email</label><input type="email" id="pEmail"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Phone</label><input type="text" id="pPhone"></div>
+              <div class="form-group"><label>Location</label><input type="text" id="pLocation"></div>
+            </div>
+            <div class="form-group"><label>LinkedIn URL</label><input type="text" id="pLinkedin"></div>
+            <div class="form-group"><label>Professional Summary</label><textarea id="pSummary" style="min-height:80px;"></textarea></div>
+            <div class="form-group"><label>Work Experience</label><textarea id="pExperience" style="min-height:180px;"></textarea></div>
+            <div class="form-group"><label>Education</label><textarea id="pEducation" style="min-height:80px;"></textarea></div>
+            <div class="form-group"><label>Skills</label><input type="text" id="pSkills"></div>
+            <div class="form-group"><label>Languages</label><input type="text" id="pLanguages"></div>
+            <div class="form-group"><label>Target Country</label>
+              <select id="pCountry">
+                <option value="CA">🇨🇦 Canada</option><option value="US">🇺🇸 United States</option>
+                <option value="UK">🇬🇧 United Kingdom</option><option value="EU">🇪🇺 Europe</option>
+                <option value="AU">🇦🇺 Australia</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:1.5rem;display:flex;gap:1rem;">
+            <button class="btn btn-primary" onclick="generateFromParsed()">✨ Build My Resume — Free</button>
+            <button class="btn btn-outline" onclick="fillCreateForm()">✏️ Edit in Full Form</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- RESUME RESULT -->
     <div id="resumeResult" class="hidden">
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
           <h3 style="margin:0;">✅ Your Resume</h3>
-          <div style="display:flex;gap:0.5rem;">
-            <button class="btn btn-outline btn-sm" onclick="copyResumeText()">📋 Copy</button>
-            <button class="btn btn-outline btn-sm" onclick="printResume()">🖨️ Print / PDF</button>
+          <div class="no-print" style="display:flex;gap:0.5rem;">
+            <button class="btn btn-outline btn-sm" onclick="copyResumeText()">📋 Copy Text</button>
+            <button class="btn btn-primary btn-sm" onclick="exportResumePDF()">📥 Download PDF</button>
           </div>
         </div>
         <div id="resumePreview" class="resume-preview"></div>
       </div>
-      <div class="card" style="text-align:center;background:rgba(56,189,248,0.05);border-color:rgba(56,189,248,0.15);">
+      <div class="card no-print" style="text-align:center;background:rgba(56,189,248,0.05);border-color:rgba(56,189,248,0.15);">
         <h3 style="justify-content:center;">🎯 Ready to Apply for a Specific Job?</h3>
         <p style="color:var(--text2);margin-bottom:1rem;">Upgrade to Pro to tailor this resume to any job posting, get your ATS score, and generate a custom cover letter.</p>
         <button class="btn btn-primary" onclick="showPage('tailor')">Go to Tailor to Job →</button>
@@ -383,7 +476,11 @@ textarea{min-height:120px;}
 
       <div class="card">
         <h3>📄 Your Resume</h3>
-        <p style="color:var(--text2);margin-bottom:1rem;">Paste your current resume text below (or use the one you built in Step 1).</p>
+        <p style="color:var(--text2);margin-bottom:1rem;">Paste your current resume text below.</p>
+        <div id="tailorAutoFill" class="hidden" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:0.9rem;">✅ You have a resume from Step 1</span>
+          <button class="btn btn-outline btn-sm" onclick="useSavedResume()">Use It</button>
+        </div>
         <div class="form-group"><textarea id="tailorResume" style="min-height:200px;" placeholder="Paste your resume text here..."></textarea></div>
         <button class="btn btn-primary" onclick="tailorToJob()">🚀 Tailor Resume + ATS Score + Cover Letter</button>
       </div>
@@ -409,9 +506,9 @@ textarea{min-height:120px;}
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
             <h3 style="margin:0;">⚡ Optimized Resume</h3>
-            <div style="display:flex;gap:0.5rem;">
+            <div class="no-print" style="display:flex;gap:0.5rem;">
               <button class="btn btn-outline btn-sm" onclick="copyResumeText()">📋 Copy</button>
-              <button class="btn btn-outline btn-sm" onclick="printResume()">🖨️ Print / PDF</button>
+              <button class="btn btn-primary btn-sm" onclick="exportResumePDF('resumePreview2')">📥 Download PDF</button>
             </div>
           </div>
           <div id="resumePreview2" class="resume-preview"></div>
@@ -421,7 +518,10 @@ textarea{min-height:120px;}
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
             <h3 style="margin:0;">✉️ Cover Letter</h3>
-            <button class="btn btn-outline btn-sm" onclick="copyCoverLetter()">📋 Copy</button>
+            <div class="no-print" style="display:flex;gap:0.5rem;">
+              <button class="btn btn-outline btn-sm" onclick="copyCoverLetter()">📋 Copy</button>
+              <button class="btn btn-primary btn-sm" onclick="exportCoverLetterPDF()">📥 Download PDF</button>
+            </div>
           </div>
           <div id="coverLetterOutput" class="letter-output"></div>
         </div>
@@ -557,7 +657,17 @@ function showPage(page) {
     const pages=['home','resume','tailor','interview'];
     n.classList.toggle('active', pages[i]===page);
   });
+  // Show auto-fill hint on tailor page if we have a saved resume
+  if (page === 'tailor' && savedResumeText && savedResumeText.length > 50) {
+    document.getElementById('tailorAutoFill').classList.remove('hidden');
+    document.getElementById('tailorAutoFill').style.display = 'flex';
+  }
   window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function useSavedResume() {
+  document.getElementById('tailorResume').value = savedResumeText;
+  document.getElementById('tailorAutoFill').style.display = 'none';
 }
 
 function upgradeTo(plan) {
@@ -566,9 +676,12 @@ function upgradeTo(plan) {
 
 // ===================== RESUME (FREE) =====================
 function switchResumeTab(tab) {
-  document.querySelectorAll('#page-resume .input-method button').forEach((b,i)=> b.classList.toggle('active', (tab==='create'&&i===0)||(tab==='upload'&&i===1)));
+  document.querySelectorAll('#page-resume .input-method button').forEach((b,i)=> {
+    b.classList.toggle('active', (tab==='create'&&i===0)||(tab==='upload'&&i===1)||(tab==='file'&&i===2));
+  });
   document.getElementById('resume-create').classList.toggle('hidden', tab!=='create');
   document.getElementById('resume-upload').classList.toggle('hidden', tab!=='upload');
+  document.getElementById('resume-file').classList.toggle('hidden', tab!=='file');
 }
 
 async function generateGenericResume() {
@@ -643,13 +756,205 @@ function copyResumeText() {
   const el = document.querySelector('.resume-preview');
   navigator.clipboard.writeText(el.innerText).then(()=>alert('Resume copied!'));
 }
-function printResume() {
-  const el = document.querySelector('.resume-preview');
-  const w = window.open('','','width=800,height=1100');
-  w.document.write('<html><head><title>Resume</title><style>body{font-family:Georgia,serif;padding:2rem;line-height:1.6;color:#1a1a1a;}h2{margin-bottom:0.25rem;}.contact{color:#666;font-size:0.85rem;margin-bottom:1.5rem;}.section-head{color:#2563eb;font-size:0.85rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #2563eb;padding-bottom:0.25rem;margin:1.5rem 0 0.75rem;}.exp-title{font-weight:700;}.exp-company{color:#666;font-size:0.9rem;}ul{padding-left:1.2rem;margin:0.5rem 0;}li{margin-bottom:0.3rem;font-size:0.9rem;}.skill-pills{display:flex;flex-wrap:wrap;gap:0.4rem;}.skill-pill{background:#e8f4fd;color:#1e6fa1;padding:0.2rem 0.6rem;border-radius:4px;font-size:0.8rem;}</style></head><body>');
-  w.document.write(el.innerHTML);
-  w.document.write('</body></html>');
-  w.document.close(); w.print();
+
+// ===================== PDF EXPORT =====================
+function exportResumePDF(targetId) {
+  const sourceId = targetId || 'resumePreview';
+  const el = document.getElementById(sourceId);
+  if (!el || !el.innerHTML.trim()) return alert('No resume to export');
+  const w = window.open('','_blank','width=850,height=1100');
+  w.document.write(`<!DOCTYPE html><html><head><title>Resume — HireReady</title>
+<style>
+  @page { size: letter; margin: 0.7in; }
+  body { font-family: Georgia, 'Times New Roman', serif; line-height: 1.55; color: #1a1a1a; margin: 0; padding: 0; }
+  h2 { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 22pt; margin: 0 0 2px 0; color: #111; }
+  .contact { color: #555; font-size: 9.5pt; margin-bottom: 16px; }
+  .section-head { color: #2563eb; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9.5pt; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid #2563eb;
+    padding-bottom: 3px; margin: 18px 0 8px 0; }
+  .exp-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 11pt; }
+  .exp-company { color: #555; font-size: 9.5pt; margin-bottom: 4px; }
+  ul { padding-left: 18px; margin: 4px 0 12px 0; }
+  li { font-size: 10pt; margin-bottom: 3px; line-height: 1.45; }
+  p { font-size: 10.5pt; margin: 0 0 6px 0; }
+  .skill-pills { display: flex; flex-wrap: wrap; gap: 4px; }
+  .skill-pill { background: #e8f4fd; color: #1e6fa1; padding: 2px 8px; border-radius: 3px;
+    font-size: 8.5pt; font-family: 'Helvetica Neue', Arial, sans-serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+</style></head><body>${el.innerHTML}</body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 400);
+}
+
+function exportCoverLetterPDF() {
+  const el = document.getElementById('coverLetterOutput');
+  if (!el || !el.textContent.trim()) return alert('No cover letter to export');
+  const w = window.open('','_blank','width=850,height=1100');
+  w.document.write(`<!DOCTYPE html><html><head><title>Cover Letter — HireReady</title>
+<style>
+  @page { size: letter; margin: 1in; }
+  body { font-family: Georgia, 'Times New Roman', serif; font-size: 11.5pt; line-height: 1.7; color: #1a1a1a; margin: 0; padding: 0; }
+  .letter { white-space: pre-wrap; }
+</style></head><body><div class="letter">${el.textContent}</div></body></html>`);
+  w.document.close();
+  setTimeout(() => { w.print(); }, 400);
+}
+
+// ===================== FILE UPLOAD =====================
+// PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// Drag & Drop
+const uploadZone = document.getElementById('uploadZone');
+if (uploadZone) {
+  ['dragenter','dragover'].forEach(e => uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(e => uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.remove('dragover'); }));
+  uploadZone.addEventListener('drop', ev => {
+    const file = ev.dataTransfer.files[0];
+    if (file) processFile(file);
+  });
+}
+
+function handleFileUpload(input) {
+  const file = input.files[0];
+  if (file) processFile(file);
+}
+
+async function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const allowed = ['pdf','docx','doc','txt'];
+  if (!allowed.includes(ext)) return alert('Unsupported file type. Please upload PDF, DOCX, or TXT.');
+  if (file.size > 10 * 1024 * 1024) return alert('File too large. Maximum 10MB.');
+
+  const progress = document.getElementById('uploadProgress');
+  const fill = document.getElementById('progressFill');
+  const text = document.getElementById('progressText');
+  progress.style.display = 'block';
+  fill.style.width = '20%';
+  text.textContent = 'Reading file...';
+
+  let rawText = '';
+
+  try {
+    if (ext === 'pdf') {
+      rawText = await extractPDF(file);
+    } else if (ext === 'docx' || ext === 'doc') {
+      rawText = await extractDOCX(file);
+    } else if (ext === 'txt') {
+      rawText = await file.text();
+    }
+
+    if (!rawText || rawText.trim().length < 30) {
+      throw new Error('Could not extract readable text from the file. Try pasting your resume text instead.');
+    }
+
+    fill.style.width = '50%';
+    text.textContent = 'AI is analyzing your resume...';
+
+    // Send to AI for parsing
+    const r = await fetch(API+'/api/resume/parse', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ rawText })
+    });
+    const d = await r.json();
+    fill.style.width = '100%';
+
+    if (!r.ok) {
+      text.textContent = d.error || 'Parsing failed. Try pasting manually.';
+      return;
+    }
+
+    text.textContent = 'Done! Review your information below.';
+
+    // Fill parsed fields
+    const p = d.parsed;
+    document.getElementById('pName').value = p.fullName || '';
+    document.getElementById('pEmail').value = p.email || '';
+    document.getElementById('pPhone').value = p.phone || '';
+    document.getElementById('pLocation').value = p.location || '';
+    document.getElementById('pLinkedin').value = p.linkedin || '';
+    document.getElementById('pSummary').value = p.summary || '';
+    document.getElementById('pExperience').value = p.experience || '';
+    document.getElementById('pEducation').value = p.education || '';
+    document.getElementById('pSkills').value = p.skills || '';
+    document.getElementById('pLanguages').value = p.languages || '';
+    document.getElementById('parsedPreview').classList.remove('hidden');
+    document.getElementById('parsedPreview').scrollIntoView({ behavior: 'smooth' });
+
+    // Store raw text for later
+    window._parsedRawText = rawText;
+
+  } catch (err) {
+    console.error('File processing error:', err);
+    fill.style.width = '100%';
+    fill.style.background = 'var(--danger)';
+    text.textContent = err.message || 'Failed to process file. Try pasting your resume text instead.';
+  }
+}
+
+async function extractPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map(item => item.str).join(' ');
+    text += pageText + '\n';
+  }
+  return text;
+}
+
+async function extractDOCX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
+
+// Generate from parsed upload
+async function generateFromParsed() {
+  const exp = document.getElementById('pExperience').value;
+  if (!exp) return alert('Please check that work experience was extracted');
+  showLoading('AI is building your resume...');
+  try {
+    const r = await fetch(API+'/api/resume/generate', { method:'POST', headers:headers(), body:JSON.stringify({
+      mode: 'generic',
+      targetCountry: document.getElementById('pCountry').value,
+      personalInfo: {
+        name: document.getElementById('pName').value,
+        email: document.getElementById('pEmail').value,
+        phone: document.getElementById('pPhone').value,
+        location: document.getElementById('pLocation').value,
+        linkedin: document.getElementById('pLinkedin').value,
+        summary: document.getElementById('pSummary').value,
+        experience: exp,
+        education: document.getElementById('pEducation').value,
+        skills: document.getElementById('pSkills').value,
+        languages: document.getElementById('pLanguages').value
+      }
+    })});
+    const d = await r.json(); hideLoading();
+    if (!r.ok) return alert(d.error||'Failed');
+    renderResume(d.resume, 'resumePreview');
+    document.getElementById('resumeResult').classList.remove('hidden');
+    document.getElementById('resumeResult').scrollIntoView({behavior:'smooth'});
+  } catch(e) { hideLoading(); alert('Connection failed'); }
+}
+
+// Fill the Create form from parsed data
+function fillCreateForm() {
+  document.getElementById('rName').value = document.getElementById('pName').value;
+  document.getElementById('rEmail').value = document.getElementById('pEmail').value;
+  document.getElementById('rPhone').value = document.getElementById('pPhone').value;
+  document.getElementById('rLocation').value = document.getElementById('pLocation').value;
+  document.getElementById('rLinkedin').value = document.getElementById('pLinkedin').value;
+  document.getElementById('rExperience').value = document.getElementById('pExperience').value;
+  document.getElementById('rEducation').value = document.getElementById('pEducation').value;
+  document.getElementById('rSkills').value = document.getElementById('pSkills').value;
+  switchResumeTab('create');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ===================== TAILOR TO JOB (PRO) =====================
