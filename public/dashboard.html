@@ -1432,7 +1432,13 @@ async function doExport(lang) {
   let plainText = '';
   if (pendingExport.type === 'resume') {
     const el = pendingExport.sourceId ? document.getElementById(pendingExport.sourceId) : null;
-    plainText = el ? el.innerText : pendingExport.content.replace(/<[^>]+>/g, ' ');
+    if (el) plainText = el.innerText;
+    else {
+      const viewer = document.getElementById('docViewerContent');
+      const rp = viewer?.querySelector('.resume-preview');
+      if (rp) plainText = rp.innerText;
+      else plainText = pendingExport.content.replace(/<[^>]+>/g, ' ');
+    }
   } else {
     plainText = pendingExport.content;
   }
@@ -1449,49 +1455,30 @@ async function doExport(lang) {
     return;
   }
 
-  // Different language — regenerate resume in target language using working endpoint
+  // Different language — regenerate using the working generate endpoint
   document.getElementById('exportTranslating').classList.remove('hidden');
 
   try {
-    if (pendingExport.type === 'resume' && window._lastResumeForExport) {
-      // We have structured data — regenerate in target language
-      const r = window._lastResumeForExport;
-      const expText = (r.experience||[]).map(e => {
-        if (typeof e === 'string') return e;
-        return `${e.title||''}, ${e.company||''}, ${e.location||''}, ${e.startDate||''} – ${e.endDate||''}\n${(e.bullets||[]).map(b=>'- '+b).join('\n')}`;
-      }).join('\n\n');
-      const eduText = (r.education||[]).map(e => typeof e === 'string' ? e : `${e.degree||''}, ${e.school||''}, ${e.year||''}`).join('\n');
-
-      const resp = await fetch(API+'/api/resume/generate', {
-        method: 'POST', headers: headers(),
-        body: JSON.stringify({
-          mode: 'generic',
-          language: lang,
-          targetCountry: 'CA',
-          personalInfo: {
-            name: r.fullName || r.full_name || '',
-            email: r.email || '',
-            phone: r.phone || '',
-            location: r.location || '',
-            linkedin: r.linkedinUrl || r.linkedin_url || '',
-            experience: expText,
-            education: eduText,
-            skills: (r.skills||[]).join(', '),
-            languages: (r.languages||[]).join(', ')
-          }
-        })
-      });
-      const d = await resp.json();
-      if (resp.ok && d.resume) {
-        const html = buildResumeHTML(d.resume);
-        printExport({ ...pendingExport, content: html, type: 'resume' });
-        closeExportModal();
-        return;
-      }
+    // Send the plain text as "experience" and let AI rebuild in target language
+    const resp = await fetch(API+'/api/resume/generate', {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({
+        mode: 'generic',
+        language: lang,
+        targetCountry: 'CA',
+        personalInfo: {
+          rawResume: plainText.substring(0, 4000)
+        }
+      })
+    });
+    const d = await resp.json();
+    if (resp.ok && d.resume) {
+      const html = buildResumeHTML(d.resume);
+      printExport({ ...pendingExport, content: html, type: 'resume' });
+      closeExportModal();
+      return;
     }
-
-    // Fallback for cover letters or if resume regen fails — export original
-    throw new Error('Regen failed');
+    throw new Error(d.error || 'Generation failed');
   } catch (e) {
     console.error('Export translation error:', e);
     document.getElementById('exportTranslating').classList.add('hidden');
