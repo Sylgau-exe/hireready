@@ -16,7 +16,19 @@ export default async function handler(req, res) {
   const langInstruction = language === 'fr' ? '\nIMPORTANT: Generate ALL questions, hints, sample answers and tips in FRENCH.' : '';
   if (!jobDescription) return res.status(400).json({ error: 'Job description is required' });
 
-  const count = Math.min(questionCount || 8, 15);
+  // Fetch user plan to enforce question limits
+  let userPlan = 'none';
+  try {
+    const result = await sql`SELECT plan FROM users WHERE id = ${decoded.userId}`;
+    if (result.rows.length) userPlan = result.rows[0].plan || 'none';
+  } catch (e) { console.error('Plan fetch error:', e); }
+
+  // Enforce question limits by tier
+  const tier = (userPlan === 'premium') ? 'premium' : (userPlan === 'pro') ? 'pro' : 'free';
+  let count;
+  if (tier === 'free') count = 1;
+  else if (tier === 'pro') count = 3;
+  else count = Math.min(questionCount || 8, 15);
 
   try {
     const prompt = `You are an expert interviewer and career coach. Generate ${count} interview questions for this position.
@@ -103,7 +115,7 @@ Return in this exact JSON format (no markdown, no backticks):
       await sql`INSERT INTO usage_log (user_id, action, details) VALUES (${decoded.userId}, 'interview_start', ${JSON.stringify({ jobTitle, questionCount: count })})`;
     } catch(e) {}
 
-    return res.json({ success: true, sessionId, ...result });
+    return res.json({ success: true, sessionId, tier, ...result });
   } catch (error) {
     console.error('Interview start error:', error);
     return res.status(500).json({ error: 'Failed to generate questions' });

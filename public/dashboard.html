@@ -675,12 +675,38 @@ textarea{min-height:120px;}
 
     <!-- PRO GATE (shown if user is not Pro) -->
     <div id="proGate" class="hidden">
-      <div class="upgrade-gate">
-        <h3>🔓 Unlock Pro Features</h3>
-        <p>Tailor your resume to specific job postings, get ATS scores, and generate custom cover letters.</p>
-        <div class="price">$29 <span>one-time</span></div>
-        <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem;">or $19/month for unlimited jobs</p>
-        <button class="btn btn-primary" onclick="upgradeTo('pro')">Upgrade to Pro</button>
+      <div class="card" style="padding:1.5rem;">
+        <div style="text-align:center;margin-bottom:1.25rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+          <h3 style="margin-bottom:0.5rem;">Unlock Pro Features</h3>
+          <p style="color:var(--text2);font-size:0.9rem;">Upgrade to Pro to tailor your resume for specific job postings.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--bg);border:1px solid rgba(56,189,248,0.2);border-radius:10px;">
+            <span style="font-size:1.5rem;flex-shrink:0;">🎯</span>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;">Tailor your resume for this job</div>
+              <div style="color:var(--text2);font-size:0.82rem;line-height:1.4;">AI rewrites your resume to match the job posting — specific keywords, relevant experience first.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--bg);border:1px solid rgba(129,140,248,0.2);border-radius:10px;">
+            <span style="font-size:1.5rem;flex-shrink:0;">📊</span>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;">Get your ATS match score</div>
+              <div style="color:var(--text2);font-size:0.82rem;line-height:1.4;">See exactly how well your resume matches — before and after optimization.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--bg);border:1px solid rgba(192,132,252,0.2);border-radius:10px;">
+            <span style="font-size:1.5rem;flex-shrink:0;">📈</span>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;">Improve your match</div>
+              <div style="color:var(--text2);font-size:0.82rem;line-height:1.4;">Get missing keywords, skill gaps, and a custom cover letter — all in one click.</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:1.25rem;">
+          <button class="btn btn-primary btn-block" onclick="upgradeTo('pro')">⚡ Upgrade to Pro</button>
+        </div>
       </div>
     </div>
 
@@ -856,18 +882,49 @@ textarea{min-height:120px;}
       <p>Practice with voice simulation and AI feedback — <span style="color:#c084fc;font-weight:600;">PREMIUM</span></p>
     </div>
 
-    <!-- PREMIUM GATE -->
-    <div id="premiumGate" class="hidden">
-      <div class="upgrade-gate">
-        <h3>🔓 Unlock Premium Features</h3>
-        <p>AI interview simulation with voice answers and tone analysis. Practice until you're confident.</p>
-        <div class="price">$49 <span>one-time</span></div>
-        <p style="color:var(--text2);font-size:0.85rem;margin-bottom:1.5rem;">or $29/month for unlimited sessions</p>
-        <button class="btn btn-primary" onclick="upgradeTo('premium')">Upgrade to Premium</button>
+    <!-- INTERVIEW TIER INFO (shown based on plan) -->
+    <div id="interviewTierInfo" class="hidden">
+      <!-- Free tier info -->
+      <div id="intTierFree" class="hidden">
+        <div class="card" style="border:1px solid rgba(52,211,153,0.2);background:rgba(52,211,153,0.03);">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+            <span style="font-size:1.3rem;">🆓</span>
+            <div>
+              <div style="font-weight:600;">Free Preview — 1 Question</div>
+              <div style="color:var(--text2);font-size:0.85rem;">Try a real interview question and see your score.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg);border-radius:8px;">
+              <span style="font-size:1.2rem;">🎯</span>
+              <div><span style="font-weight:600;">1 interview question</span><span style="color:var(--text2);font-size:0.85rem;"> + score</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg);border:1px dashed rgba(56,189,248,0.2);border-radius:8px;opacity:0.6;">
+              <span style="font-size:1.2rem;">🔒</span>
+              <div><span style="color:var(--text2);font-size:0.85rem;">Feedback, improvement tips, and hiring probability — Pro & Premium</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pro tier info -->
+      <div id="intTierPro" class="hidden">
+        <div class="card" style="border:1px solid rgba(56,189,248,0.2);background:rgba(56,189,248,0.03);">
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+            <span style="font-size:1.3rem;">💎</span>
+            <div>
+              <div style="font-weight:600;">Pro — 3 Questions</div>
+              <div style="color:var(--text2);font-size:0.85rem;">Practice with feedback and a satisfaction score.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg);border:1px dashed rgba(192,132,252,0.2);border-radius:8px;opacity:0.7;">
+            <span style="font-size:1.2rem;">🔒</span>
+            <div><span style="color:var(--text2);font-size:0.85rem;">Full interview, answer improvement, hiring probability — Premium</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- PREMIUM CONTENT -->
+    <!-- INTERVIEW CONTENT (always visible now — tier limits handled by API) -->
     <div id="premiumContent">
       <!-- SETUP -->
       <div id="interviewSetup">
@@ -938,6 +995,7 @@ textarea{min-height:120px;}
             </div>
             <div id="deliverySummary" style="text-align:center;margin:1rem 0;"></div>
             <div id="summaryDetails"></div>
+            <div id="hiringProbContainer"></div>
             <div style="text-align:center;margin-top:1rem;">
               <button class="btn btn-primary" onclick="showPage('interview');resetInterview();">Practice Again</button>
             </div>
@@ -1420,6 +1478,7 @@ async function loadUser() {
     // For now during development, grant all access
     // Later: check currentUser.plan and show gates
     updateRfTierNote();
+    applyPlanGates();
   } catch(e) { localStorage.removeItem('auth_token'); window.location.href = '/'; }
 }
 loadUser();
@@ -1436,11 +1495,11 @@ function showPage(page) {
     n.classList.toggle('active', pages[i]===page);
   });
   // Load saved resumes when opening tailor page
-  if (page === 'tailor') loadSavedResumes();
+  if (page === 'tailor') { loadSavedResumes(); applyPlanGates(); }
   // Load documents when switching to docs page
   if (page === 'docs') loadDocuments();
   // Load previous jobs for interview page
-  if (page === 'interview') loadInterviewJobs();
+  if (page === 'interview') { loadInterviewJobs(); applyPlanGates(); }
   // Load latest resume when visiting resume page
   if (page === 'resume') loadLatestResume();
   // Update tier note when visiting role finder
@@ -1566,6 +1625,50 @@ function getSelectedResumeText() {
 
 function upgradeTo(plan) {
   alert('Payment integration coming soon! For now, all features are unlocked for testing.');
+}
+
+// Apply tier-based access gates across all pages
+function applyPlanGates() {
+  const plan = currentUser?.plan || 'none';
+  const tier = (plan === 'premium') ? 'premium' : (plan === 'pro') ? 'pro' : 'free';
+
+  // --- TAILOR PAGE: Pro+ only ---
+  const proGate = document.getElementById('proGate');
+  const proContent = document.getElementById('proContent');
+  if (proGate && proContent) {
+    if (tier === 'free') {
+      proGate.classList.remove('hidden');
+      proContent.classList.add('hidden');
+    } else {
+      proGate.classList.add('hidden');
+      proContent.classList.remove('hidden');
+    }
+  }
+
+  // --- INTERVIEW PAGE: all tiers, different limits ---
+  const tierInfo = document.getElementById('interviewTierInfo');
+  const intTierFree = document.getElementById('intTierFree');
+  const intTierPro = document.getElementById('intTierPro');
+  const intCountGroup = document.getElementById('intCount')?.closest('.form-group');
+
+  if (tierInfo && intTierFree && intTierPro) {
+    if (tier === 'free') {
+      tierInfo.classList.remove('hidden');
+      intTierFree.classList.remove('hidden');
+      intTierPro.classList.add('hidden');
+      if (intCountGroup) intCountGroup.style.display = 'none';
+    } else if (tier === 'pro') {
+      tierInfo.classList.remove('hidden');
+      intTierFree.classList.add('hidden');
+      intTierPro.classList.remove('hidden');
+      if (intCountGroup) intCountGroup.style.display = 'none';
+    } else {
+      tierInfo.classList.add('hidden');
+      intTierFree.classList.add('hidden');
+      intTierPro.classList.add('hidden');
+      if (intCountGroup) intCountGroup.style.display = '';
+    }
+  }
 }
 
 // ===================== RESUME (FREE) =====================
@@ -2575,7 +2678,7 @@ function stopRecording(questionIdx) {
 async function startInterview() {
   const jd = document.getElementById('intJobDesc').value;
   if (!jd) return alert('Please paste the job description');
-  showLoading('AI is preparing your interview...');
+  showLoading(t('loading.interview'));
   try {
     const r = await fetch(API+'/api/interview/start', { method:'POST', headers:headers(), body:JSON.stringify({
       jobDescription:jd, jobTitle:document.getElementById('intJobTitle').value, language:currentLang,
@@ -2584,7 +2687,8 @@ async function startInterview() {
     })});
     const d = await r.json(); hideLoading();
     if (!r.ok) return alert(d.error||'Failed');
-    interviewData = d; currentQuestion = 0; scores = []; deliveryScores = [];
+    interviewData = d; interviewData.tier = d.tier || 'free';
+    currentQuestion = 0; scores = []; deliveryScores = [];
     document.getElementById('interviewSetup').classList.add('hidden');
     document.getElementById('interviewSession').classList.remove('hidden');
     document.getElementById('interviewSummary').classList.add('hidden');
@@ -2649,34 +2753,86 @@ async function submitAnswer(idx) {
     scores.push(d.evaluation.score);
     if (d.evaluation.deliveryScore) deliveryScores.push(d.evaluation.deliveryScore);
     const ev = d.evaluation;
+    const tier = interviewData.tier || 'free';
     const sc = ev.score>=7?'var(--success)':ev.score>=5?'var(--warn)':'var(--danger)';
 
-    let deliveryHtml = '';
-    if (ev.deliveryFeedback) {
-      const dc = (ev.deliveryScore||0)>=7?'var(--success)':(ev.deliveryScore||0)>=5?'var(--warn)':'var(--danger)';
-      deliveryHtml = `
-        <div style="margin-top:1rem;padding:1rem;background:rgba(192,132,252,0.08);border-radius:8px;border:1px solid rgba(192,132,252,0.2);">
-          <div class="score-badge" style="background:${dc}22;color:${dc};border:1px solid ${dc}44;">🎙️ Delivery: ${ev.deliveryScore}/10</div>
-          <p style="font-size:0.9rem;">${ev.deliveryFeedback}</p>
-        </div>`;
-    }
+    let feedbackHtml = '';
 
-    document.getElementById('feedbackArea').innerHTML = `
+    if (tier === 'free') {
+      // FREE: score only + upgrade prompt
+      feedbackHtml = `
       <div class="feedback-card">
-        <div class="score-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">Content: ${ev.score}/10</div>
-        <p style="margin-bottom:0.75rem;">${ev.feedback}</p>
-        <div style="margin-bottom:0.5rem;"><strong style="color:var(--success);">Strengths:</strong> ${(ev.strengths||[]).join(', ')}</div>
-        <div style="margin-bottom:0.75rem;"><strong style="color:var(--warn);">To Improve:</strong> ${(ev.improvements||[]).join(', ')}</div>
-        <div style="background:var(--bg);padding:1rem;border-radius:8px;margin-top:0.75rem;">
-          <strong>💡 Suggested Stronger Answer:</strong>
-          <p style="margin-top:0.5rem;color:var(--text2);line-height:1.6;">${ev.suggestedAnswer}</p>
+        <div class="score-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">Score: ${ev.score}/10</div>
+        <div style="margin-top:1rem;padding:1.25rem;background:var(--bg);border:1px dashed rgba(56,189,248,0.3);border-radius:10px;text-align:center;">
+          <p style="font-weight:600;margin-bottom:0.5rem;">🔒 Want to know how to improve?</p>
+          <p style="color:var(--text2);font-size:0.9rem;margin-bottom:1rem;">Upgrade to Pro for detailed feedback on your answers.</p>
+          <button class="btn btn-outline btn-sm" onclick="upgradeTo('pro')">Upgrade to Pro</button>
         </div>
-        ${deliveryHtml}
-        <p style="margin-top:0.75rem;font-style:italic;color:var(--accent);">Tip: ${ev.tip}</p>
         <button class="btn btn-primary" style="margin-top:1rem;" onclick="nextQuestion(${idx})">
           ${idx < interviewData.questions.length-1 ? 'Next Question →' : 'See Summary →'}
         </button>
       </div>`;
+
+    } else if (tier === 'pro') {
+      // PRO: score + feedback + strengths/improvements, no suggested answer
+      feedbackHtml = `
+      <div class="feedback-card">
+        <div class="score-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">Content: ${ev.score}/10</div>
+        <p style="margin-bottom:0.75rem;">${ev.feedback || ''}</p>
+        <div style="margin-bottom:0.5rem;"><strong style="color:var(--success);">Strengths:</strong> ${(ev.strengths||[]).join(', ')}</div>
+        <div style="margin-bottom:0.75rem;"><strong style="color:var(--warn);">To Improve:</strong> ${(ev.improvements||[]).join(', ')}</div>
+        <div style="margin-top:1rem;padding:1.25rem;background:var(--bg);border:1px dashed rgba(192,132,252,0.3);border-radius:10px;text-align:center;">
+          <p style="font-weight:600;margin-bottom:0.5rem;">🔒 Want a rewritten stronger answer?</p>
+          <p style="color:var(--text2);font-size:0.9rem;margin-bottom:1rem;">Upgrade to Premium for answer improvement tips and hiring probability.</p>
+          <button class="btn btn-outline btn-sm" style="border-color:rgba(192,132,252,0.3);color:#c084fc;" onclick="upgradeTo('premium')">Upgrade to Premium</button>
+        </div>
+        <p style="margin-top:0.75rem;font-style:italic;color:var(--accent);">Tip: ${ev.tip || ''}</p>
+        <button class="btn btn-primary" style="margin-top:1rem;" onclick="nextQuestion(${idx})">
+          ${idx < interviewData.questions.length-1 ? 'Next Question →' : 'See Summary →'}
+        </button>
+      </div>`;
+
+    } else {
+      // PREMIUM: everything — score, feedback, suggested answer, improvement tips, delivery
+      let deliveryHtml = '';
+      if (ev.deliveryFeedback) {
+        const dc = (ev.deliveryScore||0)>=7?'var(--success)':(ev.deliveryScore||0)>=5?'var(--warn)':'var(--danger)';
+        deliveryHtml = `
+          <div style="margin-top:1rem;padding:1rem;background:rgba(192,132,252,0.08);border-radius:8px;border:1px solid rgba(192,132,252,0.2);">
+            <div class="score-badge" style="background:${dc}22;color:${dc};border:1px solid ${dc}44;">🎙️ Delivery: ${ev.deliveryScore}/10</div>
+            <p style="font-size:0.9rem;">${ev.deliveryFeedback}</p>
+          </div>`;
+      }
+      let improveTipsHtml = '';
+      if (ev.improvementTips?.length) {
+        improveTipsHtml = `
+          <div style="margin-top:1rem;padding:1rem;background:rgba(52,211,153,0.08);border-radius:8px;border:1px solid rgba(52,211,153,0.2);">
+            <strong style="color:var(--success);">✏️ How to improve this answer:</strong>
+            <ul style="margin-top:0.5rem;padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.6;">
+              ${ev.improvementTips.map(t => `<li>${t}</li>`).join('')}
+            </ul>
+          </div>`;
+      }
+      feedbackHtml = `
+      <div class="feedback-card">
+        <div class="score-badge" style="background:${sc}22;color:${sc};border:1px solid ${sc}44;">Content: ${ev.score}/10</div>
+        <p style="margin-bottom:0.75rem;">${ev.feedback || ''}</p>
+        <div style="margin-bottom:0.5rem;"><strong style="color:var(--success);">Strengths:</strong> ${(ev.strengths||[]).join(', ')}</div>
+        <div style="margin-bottom:0.75rem;"><strong style="color:var(--warn);">To Improve:</strong> ${(ev.improvements||[]).join(', ')}</div>
+        ${ev.suggestedAnswer ? `<div style="background:var(--bg);padding:1rem;border-radius:8px;margin-top:0.75rem;">
+          <strong>💡 Suggested Stronger Answer:</strong>
+          <p style="margin-top:0.5rem;color:var(--text2);line-height:1.6;">${ev.suggestedAnswer}</p>
+        </div>` : ''}
+        ${improveTipsHtml}
+        ${deliveryHtml}
+        <p style="margin-top:0.75rem;font-style:italic;color:var(--accent);">Tip: ${ev.tip || ''}</p>
+        <button class="btn btn-primary" style="margin-top:1rem;" onclick="nextQuestion(${idx})">
+          ${idx < interviewData.questions.length-1 ? 'Next Question →' : 'See Summary →'}
+        </button>
+      </div>`;
+    }
+
+    document.getElementById('feedbackArea').innerHTML = feedbackHtml;
     document.getElementById('feedbackArea').scrollIntoView({behavior:'smooth'});
   } catch(e) { hideLoading(); alert('Connection failed'); }
 }
@@ -2710,6 +2866,81 @@ function showInterviewSummary() {
   else if (avg>=6) msg+='Good job! A few areas to polish. 💪';
   else msg+='Great practice! Review the suggested answers. 📚';
   document.getElementById('summaryDetails').innerHTML = `<div style="text-align:center;margin-top:1rem;color:var(--text2);">${msg}</div>`;
+
+  // Premium: fetch hiring probability
+  const tier = interviewData?.tier || 'free';
+  const hpContainer = document.getElementById('hiringProbContainer');
+  if (hpContainer) hpContainer.innerHTML = '';
+
+  if (tier === 'premium' && valid.length > 0) {
+    fetchHiringProbability(avg, valid);
+  } else if (tier !== 'premium' && hpContainer) {
+    // Show upgrade teaser
+    hpContainer.innerHTML = `
+      <div style="text-align:center;padding:1.5rem;border:1px dashed rgba(192,132,252,0.3);border-radius:12px;margin-top:1rem;">
+        <p style="font-weight:600;margin-bottom:0.5rem;">🔒 What are your real hiring chances?</p>
+        <p style="color:var(--text2);font-size:0.9rem;margin-bottom:1rem;">Upgrade to Premium to see your estimated hiring probability and get personalized next steps.</p>
+        <button class="btn btn-outline btn-sm" style="border-color:rgba(192,132,252,0.3);color:#c084fc;" onclick="upgradeTo('premium')">Upgrade to Premium</button>
+      </div>`;
+  }
+}
+
+async function fetchHiringProbability(avg, validScores) {
+  const container = document.getElementById('hiringProbContainer');
+  if (!container) return;
+  container.innerHTML = '<p style="text-align:center;color:var(--text2);padding:1rem;">Calculating your hiring probability...</p>';
+  try {
+    const r = await fetch(API+'/api/interview/hiring-probability', {
+      method:'POST', headers:headers(),
+      body: JSON.stringify({
+        jobTitle: document.getElementById('intJobTitle').value,
+        jobDescription: document.getElementById('intJobDesc').value.substring(0, 1500),
+        scores: validScores, questionCount: interviewData.questions.length,
+        avgScore: avg, language: currentLang
+      })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) {
+      container.innerHTML = '';
+      return;
+    }
+    const hp = d.result;
+    const pColor = hp.probability>=70?'var(--success)':hp.probability>=50?'var(--warn)':'var(--danger)';
+    container.innerHTML = `
+      <div style="text-align:center;margin-top:1.5rem;">
+        <h3 style="margin-bottom:1rem;">📊 Hiring Probability</h3>
+        <div style="width:120px;height:120px;border-radius:50%;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;background:conic-gradient(${pColor} ${hp.probability*3.6}deg, var(--bg) 0);position:relative;">
+          <div style="width:90px;height:90px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;">
+            <span style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:700;color:${pColor};">${hp.probability}%</span>
+          </div>
+        </div>
+        <div style="font-weight:600;font-size:1.1rem;color:${pColor};margin-bottom:0.75rem;">${hp.verdict}</div>
+        <p style="color:var(--text2);max-width:500px;margin:0 auto 1rem;line-height:1.6;">${hp.summary}</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+        <div style="background:rgba(52,211,153,0.08);border-radius:10px;padding:1rem;">
+          <strong style="color:var(--success);font-size:0.85rem;">Strengths</strong>
+          <ul style="margin-top:0.5rem;padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.5;">
+            ${(hp.strengths||[]).map(s=>`<li>${s}</li>`).join('')}
+          </ul>
+        </div>
+        <div style="background:rgba(248,113,113,0.08);border-radius:10px;padding:1rem;">
+          <strong style="color:var(--danger);font-size:0.85rem;">Risks</strong>
+          <ul style="margin-top:0.5rem;padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.5;">
+            ${(hp.risks||[]).map(s=>`<li>${s}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+      ${hp.nextSteps?.length ? `<div style="margin-top:1rem;padding:1rem;background:rgba(56,189,248,0.08);border-radius:10px;">
+        <strong style="color:var(--accent);font-size:0.85rem;">Next Steps</strong>
+        <ul style="margin-top:0.5rem;padding-left:1.25rem;color:var(--text2);font-size:0.9rem;line-height:1.5;">
+          ${hp.nextSteps.map(s=>`<li>${s}</li>`).join('')}
+        </ul>
+      </div>` : ''}`;
+  } catch(e) {
+    container.innerHTML = '';
+    console.error('Hiring probability error:', e);
+  }
 }
 
 function endInterview() { if (confirm('End session?')) showInterviewSummary(); }

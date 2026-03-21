@@ -16,6 +16,15 @@ export default async function handler(req, res) {
   const langInstruction = language === 'fr' ? '\nIMPORTANT: Write ALL feedback, suggestions and tips in FRENCH.' : '';
   if (!question || !userAnswer) return res.status(400).json({ error: 'Question and answer are required' });
 
+  // Fetch user plan for tier-gated response
+  let userPlan = 'none';
+  try {
+    const result = await sql`SELECT plan FROM users WHERE id = ${decoded.userId}`;
+    if (result.rows.length) userPlan = result.rows[0].plan || 'none';
+  } catch (e) { console.error('Plan fetch error:', e); }
+
+  const tier = (userPlan === 'premium') ? 'premium' : (userPlan === 'pro') ? 'pro' : 'free';
+
   // voiceMetrics: { durationSec, wordCount, wordsPerMinute, fillerWords, fillerCount, wasSpoken }
 
   try {
@@ -49,7 +58,8 @@ Evaluate the answer and return in this exact JSON format (no markdown, no backti
   "suggestedAnswer": "A stronger version of the answer that maintains the candidate's experience but improves structure and impact (3-5 sentences)",
   "tip": "One specific actionable tip"${voiceMetrics?.wasSpoken ? `,
   "deliveryFeedback": "Feedback on their verbal delivery — pace, filler words, confidence, conciseness (2-3 sentences)",
-  "deliveryScore": <number 1-10>` : ''}
+  "deliveryScore": <number 1-10>` : ''}${tier === 'premium' ? `,
+  "improvementTips": ["Specific edit: Replace X with Y", "Add a concrete metric or number here", "Start your answer with the result, then explain how"]` : ''}
 }
 
 ${langInstruction}
@@ -65,7 +75,7 @@ Be encouraging but honest. If using STAR method questions, check for Situation, 
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
@@ -84,15 +94,26 @@ Be encouraging but honest. If using STAR method questions, check for Situation, 
       return res.status(502).json({ error: 'Failed to parse AI response' });
     }
 
+    // Strip fields the user's tier shouldn't see
+    if (tier === 'free') {
+      // Free: score only, no feedback
+      evaluation = { score: evaluation.score };
+    } else if (tier === 'pro') {
+      // Pro: score + feedback, no suggested answer or improvement tips
+      delete evaluation.suggestedAnswer;
+      delete evaluation.improvementTips;
+    }
+    // Premium: everything
+
     // Save answer + feedback to DB
     if (sessionId && questionNumber) {
       try {
         await sql`
           UPDATE interview_qa SET
             user_answer = ${userAnswer},
-            ai_feedback = ${evaluation.feedback},
+            ai_feedback = ${evaluation.feedback || ''},
             score = ${evaluation.score},
-            suggested_answer = ${evaluation.suggestedAnswer}
+            suggested_answer = ${evaluation.suggestedAnswer || ''}
           WHERE session_id = ${sessionId} AND question_number = ${questionNumber}
         `;
       } catch (dbErr) {
@@ -100,7 +121,7 @@ Be encouraging but honest. If using STAR method questions, check for Situation, 
       }
     }
 
-    return res.json({ success: true, evaluation });
+    return res.json({ success: true, evaluation, tier });
   } catch (error) {
     console.error('Evaluate error:', error);
     return res.status(500).json({ error: 'Evaluation failed' });
