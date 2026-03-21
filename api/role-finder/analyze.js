@@ -138,20 +138,45 @@ JSON format:
   "tier": "pro"
 }`;
   } else {
-    tierInstruction = `TIER: PREMIUM
-Return 3-5 matching roles, each with:
+    tierInstruction = `TIER: PREMIUM — DEEP ANALYSIS
+Return 3-5 matching roles with an in-depth breakdown for each.
+
+For EACH role, provide:
 - title: the job title
 - match_pct: match percentage (0-100)
-- explanation: 2-3 sentences explaining WHY this role fits (reference specific skills and experience)
-- matching_skills: array of 3-5 skills from their background that match this role
-- missing_skills: array of 1-3 skills or gaps that would strengthen the match
+- level: "junior", "mid", "senior", or "director"
+- deep_analysis: a detailed paragraph (4-6 sentences) explaining:
+  - WHY this specific role fits the user (not generic — reference their actual experience)
+  - Which exact tasks or achievements from their background directly map to this role's responsibilities
+  - How close the user is to meeting all the requirements (e.g. "You meet 8 of 10 core requirements")
+- matching_skills: array of 3-5 skills from their background that match
+- missing_skills: array of 1-3 skills or gaps
+- readiness: "ready_now", "close", or "stretch" — how ready they are to apply today
 
-ALSO provide:
-- career_growth: An array of 2-3 actionable recommendations. Each has:
-  - action: what to do (e.g. "Get PMP certification", "Learn Python for data analysis")
+ROLE DIFFERENCES — compare the top 2-3 roles against each other:
+- role_comparisons: array of comparison objects, each with:
+  - roles: [role A title, role B title]
+  - responsibility_diff: how the day-to-day work differs (2 sentences)
+  - level_diff: which role is more senior and why
+  - requirements_diff: what additional skills/experience the higher role needs
+  - transition_path: what the user would need to do to move from A to B
+
+EXTENDED INSIGHTS:
+- target_now: array of 1-2 role titles the user should apply to immediately (best fit right now)
+- not_yet_attainable: array of 1-2 role titles that are currently out of reach, each with a brief reason why
+- blocking_skills: array of 2-3 specific skills or experience gaps that are preventing growth to higher-level roles
+- career_direction: a 3-4 sentence strategic recommendation on which direction to move in and why
+
+CAREER GROWTH PLAN:
+- career_growth: array of 2-3 actionable recommendations, each with:
+  - action: what to do (specific, e.g. "Get PMP certification", "Lead a cross-functional project")
   - impact: what it unlocks (e.g. "Qualifies you for Senior PM roles at 90%+ match")
   - priority: "high", "medium", or "low"
-- higher_roles: 1-2 aspirational roles the user could reach with improvements, each with title and requirements_gap
+
+ASPIRATIONAL ROLES:
+- higher_roles: 1-2 roles the user could reach with targeted improvements, each with:
+  - title: the role title
+  - requirements_gap: what's missing to qualify
 
 JSON format:
 {
@@ -159,12 +184,27 @@ JSON format:
     {
       "title": "...",
       "match_pct": 85,
-      "explanation": "...",
+      "level": "senior",
+      "deep_analysis": "Detailed paragraph about fit...",
       "matching_skills": ["...", "..."],
-      "missing_skills": ["...", "..."]
+      "missing_skills": ["..."],
+      "readiness": "ready_now"
     }
   ],
   "summary": "A 2-sentence summary of the person's overall career profile.",
+  "role_comparisons": [
+    {
+      "roles": ["Role A", "Role B"],
+      "responsibility_diff": "...",
+      "level_diff": "...",
+      "requirements_diff": "...",
+      "transition_path": "..."
+    }
+  ],
+  "target_now": ["..."],
+  "not_yet_attainable": [{ "title": "...", "reason": "..." }],
+  "blocking_skills": ["..."],
+  "career_direction": "Strategic recommendation...",
   "career_growth": [
     { "action": "...", "impact": "...", "priority": "high" }
   ],
@@ -197,7 +237,7 @@ Respond with ONLY valid JSON. No markdown backticks, no preamble, no explanation
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        max_tokens: tier === 'premium' ? 4000 : 2000,
         messages: [{
           role: 'user',
           content: `Analyze this person's professional background and find matching roles:\n\n${backgroundText.substring(0, 4000)}`

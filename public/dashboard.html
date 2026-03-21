@@ -415,6 +415,18 @@ textarea{min-height:120px;}
         </div>
       </div>
 
+      <!-- Role Comparisons (Premium only) -->
+      <div class="card hidden" id="rfComparisonsCard">
+        <h3>⚖️ <span data-i18n="rf.roleComparisons">Role Comparisons</span></h3>
+        <div id="rfComparisonsList"></div>
+      </div>
+
+      <!-- Extended Insights (Premium only) -->
+      <div class="card hidden" id="rfInsightsCard">
+        <h3>🧭 <span data-i18n="rf.extendedInsights">Strategic Insights</span></h3>
+        <div id="rfInsightsList"></div>
+      </div>
+
       <!-- Career Growth (Premium only) -->
       <div class="card hidden" id="rfGrowthCard">
         <h3>🚀 <span data-i18n="rf.careerGrowth">Career Growth Plan</span></h3>
@@ -3100,8 +3112,24 @@ function renderRoleResults(data) {
     const ringClass = pct >= 80 ? 'high' : pct >= 65 ? 'med' : 'low';
 
     let detailHtml = '';
-    if (tier !== 'free' && role.explanation) {
-      detailHtml += `<div class="rf-explanation">${escHtml(role.explanation)}</div>`;
+
+    // Premium: level badge + readiness
+    if (tier === 'premium') {
+      const levelColors = { junior:'var(--success)', mid:'var(--accent)', senior:'var(--warn)', director:'#c084fc' };
+      const readyLabels = { ready_now:'Ready to apply', close:'Almost ready', stretch:'Stretch role' };
+      const readyColors = { ready_now:'var(--success)', close:'var(--warn)', stretch:'var(--danger)' };
+      const lvl = role.level || 'mid';
+      const rdy = role.readiness || 'close';
+      detailHtml += `<div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">`;
+      detailHtml += `<span class="tag" style="background:${levelColors[lvl]}18;color:${levelColors[lvl]};border:1px solid ${levelColors[lvl]}33;">${lvl.charAt(0).toUpperCase()+lvl.slice(1)}</span>`;
+      detailHtml += `<span class="tag" style="background:${readyColors[rdy]}18;color:${readyColors[rdy]};border:1px solid ${readyColors[rdy]}33;">${readyLabels[rdy]||rdy}</span>`;
+      detailHtml += `</div>`;
+    }
+
+    // Premium: deep_analysis; Pro: explanation
+    const analysisText = role.deep_analysis || role.explanation || '';
+    if (tier !== 'free' && analysisText) {
+      detailHtml += `<div class="rf-explanation">${escHtml(analysisText)}</div>`;
     }
     if (tier !== 'free' && role.matching_skills?.length) {
       detailHtml += `<div class="rf-skills"><span style="font-size:0.8rem;color:var(--text2);margin-right:0.25rem;">✅ ${t('rf.matching')}:</span>`;
@@ -3133,6 +3161,81 @@ function renderRoleResults(data) {
     lockedCard.classList.remove('hidden');
   } else {
     lockedCard.classList.add('hidden');
+  }
+
+  // === Role Comparisons (Premium only) ===
+  const comparisonsCard = document.getElementById('rfComparisonsCard');
+  if (tier === 'premium' && data.role_comparisons?.length) {
+    comparisonsCard.classList.remove('hidden');
+    const compList = document.getElementById('rfComparisonsList');
+    compList.innerHTML = '';
+    data.role_comparisons.forEach(comp => {
+      compList.innerHTML += `
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:0.75rem;">
+          <div style="font-weight:600;font-size:1rem;margin-bottom:0.75rem;color:var(--accent);">
+            ${escHtml(comp.roles?.[0] || '')} <span style="color:var(--text2);font-weight:400;">vs</span> ${escHtml(comp.roles?.[1] || '')}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div style="padding:0.75rem;background:rgba(56,189,248,0.05);border-radius:8px;">
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--accent);margin-bottom:0.35rem;">Responsibilities</div>
+              <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.responsibility_diff)}</div>
+            </div>
+            <div style="padding:0.75rem;background:rgba(129,140,248,0.05);border-radius:8px;">
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--accent2);margin-bottom:0.35rem;">Level</div>
+              <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.level_diff)}</div>
+            </div>
+            <div style="padding:0.75rem;background:rgba(251,191,36,0.05);border-radius:8px;">
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--warn);margin-bottom:0.35rem;">Requirements</div>
+              <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.requirements_diff)}</div>
+            </div>
+            <div style="padding:0.75rem;background:rgba(52,211,153,0.05);border-radius:8px;">
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--success);margin-bottom:0.35rem;">How to move up</div>
+              <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.transition_path)}</div>
+            </div>
+          </div>
+        </div>`;
+    });
+  } else {
+    comparisonsCard.classList.add('hidden');
+  }
+
+  // === Extended Insights (Premium only) ===
+  const insightsCard = document.getElementById('rfInsightsCard');
+  if (tier === 'premium' && (data.career_direction || data.target_now?.length || data.blocking_skills?.length)) {
+    insightsCard.classList.remove('hidden');
+    let insHtml = '';
+
+    if (data.career_direction) {
+      insHtml += `<div style="padding:1rem;background:rgba(56,189,248,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--accent);border-radius:0;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">🧭 Career direction</div>
+        <div style="color:var(--text2);font-size:0.9rem;line-height:1.6;">${escHtml(data.career_direction)}</div>
+      </div>`;
+    }
+
+    if (data.target_now?.length) {
+      insHtml += `<div style="padding:1rem;background:rgba(52,211,153,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--success);border-radius:0;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">✅ Target now</div>
+        <div style="color:var(--text2);font-size:0.9rem;">${data.target_now.map(r => `<span class="tag tag-green" style="margin:0.15rem;">${escHtml(r)}</span>`).join('')}</div>
+      </div>`;
+    }
+
+    if (data.not_yet_attainable?.length) {
+      insHtml += `<div style="padding:1rem;background:rgba(248,113,113,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--danger);border-radius:0;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">⛔ Not yet attainable</div>
+        ${data.not_yet_attainable.map(r => `<div style="margin-bottom:0.35rem;"><span class="tag tag-red">${escHtml(r.title || r)}</span>${r.reason ? `<span style="color:var(--text2);font-size:0.85rem;margin-left:0.5rem;">— ${escHtml(r.reason)}</span>` : ''}</div>`).join('')}
+      </div>`;
+    }
+
+    if (data.blocking_skills?.length) {
+      insHtml += `<div style="padding:1rem;background:rgba(251,191,36,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--warn);border-radius:0;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">🚧 Blocking your growth</div>
+        <div style="color:var(--text2);font-size:0.9rem;">${data.blocking_skills.map(s => `<span class="tag" style="background:rgba(251,191,36,0.12);color:var(--warn);margin:0.15rem;">${escHtml(s)}</span>`).join('')}</div>
+      </div>`;
+    }
+
+    document.getElementById('rfInsightsList').innerHTML = insHtml;
+  } else {
+    insightsCard.classList.add('hidden');
   }
 
   // === Career Growth (Premium only) ===
@@ -3177,9 +3280,13 @@ function resetRoleFinder() {
   document.getElementById('rfResults').classList.add('hidden');
   document.getElementById('rfSummaryCard').classList.add('hidden');
   document.getElementById('rfLockedCard').classList.add('hidden');
+  document.getElementById('rfComparisonsCard').classList.add('hidden');
+  document.getElementById('rfInsightsCard').classList.add('hidden');
   document.getElementById('rfGrowthCard').classList.add('hidden');
   document.getElementById('rfHigherCard').classList.add('hidden');
   document.getElementById('rfRolesList').innerHTML = '';
+  document.getElementById('rfComparisonsList').innerHTML = '';
+  document.getElementById('rfInsightsList').innerHTML = '';
   document.getElementById('rfBackground').value = '';
   rfSelectedResumeId = null;
   switchRfSource('saved');
