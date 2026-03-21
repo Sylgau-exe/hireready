@@ -240,15 +240,15 @@ textarea{min-height:120px;}
     <button onclick="setLang('fr')">FR</button>
   </div>
   <div class="nav-item active" onclick="showPage('home')" style="margin-top:1rem;"><span class="icon">🏠</span><span data-i18n="nav.home">Home</span></div>
-  <div class="nav-item" onclick="showPage('rolefinder')">
-    <span class="icon">🔍</span><span data-i18n="nav.rolefinder">Role Finder</span>
-    <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
-  </div>
   <div class="nav-item" onclick="showPage('docs')">
     <span class="icon">📁</span><span data-i18n="nav.docs">My Documents</span>
   </div>
   <div class="nav-item" onclick="showPage('resume')">
     <span class="icon">📄</span><span data-i18n="nav.resume">My Resume</span>
+    <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
+  </div>
+  <div class="nav-item" onclick="showPage('rolefinder')">
+    <span class="icon">🔍</span><span data-i18n="nav.rolefinder">Role Finder</span>
     <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
   </div>
   <div class="nav-item" onclick="showPage('tailor')">
@@ -315,7 +315,7 @@ textarea{min-height:120px;}
       <button class="btn btn-primary" onclick="showPage('rolefinder')">🔍 <span data-i18n="rf.homeBtn">Try Role Finder — Free</span></button>
     </div>
 
-    <div class="card">
+    <div class="card" id="homeJourneyCard">
       <h3>🚀 Your Journey</h3>
       <p style="color:var(--text2);margin-bottom:1.5rem;line-height:1.7;">
         <strong>Step 1 (Free):</strong> Create or upload your base resume. We'll structure it professionally.<br>
@@ -627,6 +627,12 @@ textarea{min-height:120px;}
           </div>
           <div id="resumePreviewTranslated" class="resume-preview"></div>
         </div>
+      </div>
+
+      <div class="card no-print" style="text-align:center;background:linear-gradient(135deg,rgba(56,189,248,0.05),rgba(129,140,248,0.05));border-color:rgba(129,140,248,0.15);">
+        <h3 style="justify-content:center;" data-i18n="rf.resumeCta">🔍 Not sure which job titles to search for?</h3>
+        <p style="color:var(--text2);margin-bottom:1rem;" data-i18n="rf.resumeCtaDesc">Use your resume to discover which roles match your skills and experience — and find out what to target.</p>
+        <button class="btn btn-outline" onclick="showPage('rolefinder')" style="border-color:rgba(129,140,248,0.3);color:var(--accent2);">🔍 <span data-i18n="rf.resumeCtaBtn">Find Matching Roles — Free</span></button>
       </div>
 
       <div class="card no-print" style="text-align:center;background:rgba(56,189,248,0.05);border-color:rgba(56,189,248,0.15);">
@@ -1045,6 +1051,9 @@ const T = {
     'rf.homeTitle': 'Not sure which roles to target?',
     'rf.homeDesc': 'Describe your background and our AI will identify the best-matching job titles for you — so you know exactly what to search for.',
     'rf.homeBtn': 'Try Role Finder — Free',
+    'rf.resumeCta': '🔍 Not sure which job titles to search for?',
+    'rf.resumeCtaDesc': 'Use your resume to discover which roles match your skills and experience — and find out what to target.',
+    'rf.resumeCtaBtn': 'Find Matching Roles — Free',
   },
   fr: {
     // Nav
@@ -1154,6 +1163,9 @@ const T = {
     'rf.homeTitle': 'Pas certain quels postes cibler ?',
     'rf.homeDesc': 'Décrivez votre parcours et notre IA identifiera les titres d\'emploi qui correspondent le mieux à votre profil — pour savoir exactement quoi chercher.',
     'rf.homeBtn': 'Essayer le Trouveur de Rôles — Gratuit',
+    'rf.resumeCta': '🔍 Pas certain quels titres d\'emploi chercher ?',
+    'rf.resumeCtaDesc': 'Utilisez votre CV pour découvrir quels rôles correspondent à vos compétences et votre expérience — et savoir quoi cibler.',
+    'rf.resumeCtaBtn': 'Trouver les rôles correspondants — Gratuit',
   }
 };
 
@@ -1199,11 +1211,11 @@ function applyPageTranslations() {
   }
   const statLabels = document.querySelectorAll('#page-home .stat-label');
   if (statLabels.length >= 3) { statLabels[0].textContent=t('home.resumes'); statLabels[1].textContent=t('home.analyses'); statLabels[2].textContent=t('home.interviews'); }
-  const journeyH = document.querySelector('#page-home .card h3');
+  const journeyH = document.querySelector('#homeJourneyCard h3');
   if (journeyH) journeyH.innerHTML = `🚀 ${t('home.journey')}`;
-  const journeyP = document.querySelector('#page-home .card p');
+  const journeyP = document.querySelector('#homeJourneyCard p');
   if (journeyP) journeyP.innerHTML = `${t('home.s1')}<br>${t('home.s2')}<br>${t('home.s3')}`;
-  const startBtn = document.querySelector('#page-home .btn-primary');
+  const startBtn = document.querySelector('#homeJourneyCard .btn-primary');
   if (startBtn) startBtn.textContent = t('home.startBtn');
 
   // ---- RESUME PAGE ----
@@ -1391,7 +1403,7 @@ function showPage(page) {
   document.querySelectorAll('[id^="page-"]').forEach(p=>p.classList.add('hidden'));
   document.getElementById('page-'+page).classList.remove('hidden');
   document.querySelectorAll('.sidebar .nav-item').forEach((n,i)=>{
-    const pages=['home','rolefinder','docs','resume','tailor','interview'];
+    const pages=['home','docs','resume','rolefinder','tailor','interview'];
     n.classList.toggle('active', pages[i]===page);
   });
   // Load saved resumes when opening tailor page
