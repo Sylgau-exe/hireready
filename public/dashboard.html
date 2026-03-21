@@ -110,6 +110,29 @@ textarea{min-height:120px;}
 .feedback-card{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.15);border-radius:12px;padding:1.5rem;margin-top:1rem;}
 .score-badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.8rem;border-radius:100px;font-weight:700;font-size:0.85rem;margin-bottom:0.75rem;}
 
+/* ROLE FINDER */
+.rf-role{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:0.75rem;transition:border-color 0.2s;}
+.rf-role:hover{border-color:rgba(56,189,248,0.3);}
+.rf-role-header{display:flex;align-items:center;gap:1rem;margin-bottom:0.75rem;}
+.rf-match-ring{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.95rem;flex-shrink:0;position:relative;}
+.rf-match-ring::before{content:'';position:absolute;inset:0;border-radius:50%;border:3px solid var(--border);}
+.rf-match-ring.high{background:rgba(52,211,153,0.12);color:var(--success);}
+.rf-match-ring.high::before{border-color:var(--success);}
+.rf-match-ring.med{background:rgba(56,189,248,0.12);color:var(--accent);}
+.rf-match-ring.med::before{border-color:var(--accent);}
+.rf-match-ring.low{background:rgba(251,191,36,0.12);color:var(--warn);}
+.rf-match-ring.low::before{border-color:var(--warn);}
+.rf-role-title{font-size:1.05rem;font-weight:600;}
+.rf-explanation{color:var(--text2);font-size:0.9rem;line-height:1.6;margin-bottom:0.75rem;}
+.rf-skills{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.5rem;}
+.rf-locked-role{display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:var(--bg);border:1px dashed var(--border);border-radius:8px;margin:0.25rem;color:var(--text2);font-size:0.9rem;filter:blur(1.5px);user-select:none;}
+.rf-growth-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:0.75rem;}
+.rf-growth-item .rf-priority{display:inline-block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:0.15rem 0.5rem;border-radius:4px;margin-bottom:0.5rem;}
+.rf-priority-high{background:rgba(248,113,113,0.12);color:var(--danger);}
+.rf-priority-medium{background:rgba(251,191,36,0.12);color:var(--warn);}
+.rf-priority-low{background:rgba(52,211,153,0.12);color:var(--success);}
+.rf-higher-role{background:var(--bg);border:1px solid rgba(192,132,252,0.2);border-radius:10px;padding:1rem;margin-bottom:0.75rem;}
+
 /* COVER LETTER */
 .letter-output{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:2rem;white-space:pre-wrap;line-height:1.8;font-size:0.95rem;color:var(--text);}
 
@@ -217,6 +240,10 @@ textarea{min-height:120px;}
     <button onclick="setLang('fr')">FR</button>
   </div>
   <div class="nav-item active" onclick="showPage('home')" style="margin-top:1rem;"><span class="icon">🏠</span><span data-i18n="nav.home">Home</span></div>
+  <div class="nav-item" onclick="showPage('rolefinder')">
+    <span class="icon">🔍</span><span data-i18n="nav.rolefinder">Role Finder</span>
+    <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
+  </div>
   <div class="nav-item" onclick="showPage('docs')">
     <span class="icon">📁</span><span data-i18n="nav.docs">My Documents</span>
   </div>
@@ -282,6 +309,12 @@ textarea{min-height:120px;}
       <div class="stat-card"><div class="stat-num" id="statInterviews">0</div><div class="stat-label">Interview Sessions</div></div>
     </div>
 
+    <div class="card" style="border:1px solid rgba(56,189,248,0.2);background:linear-gradient(135deg,rgba(56,189,248,0.05),rgba(129,140,248,0.05));">
+      <h3>🔍 <span data-i18n="rf.homeTitle">Not sure which roles to target?</span></h3>
+      <p style="color:var(--text2);margin-bottom:1rem;line-height:1.6;" data-i18n="rf.homeDesc">Describe your background and our AI will identify the best-matching job titles for you — so you know exactly what to search for.</p>
+      <button class="btn btn-primary" onclick="showPage('rolefinder')">🔍 <span data-i18n="rf.homeBtn">Try Role Finder — Free</span></button>
+    </div>
+
     <div class="card">
       <h3>🚀 Your Journey</h3>
       <p style="color:var(--text2);margin-bottom:1.5rem;line-height:1.7;">
@@ -290,6 +323,77 @@ textarea{min-height:120px;}
         <strong>Step 3 (Premium):</strong> Prepare for the interview with AI-generated questions and voice-based simulation with tone feedback.
       </p>
       <button class="btn btn-primary" onclick="showPage('resume')">📄 Start with My Resume</button>
+    </div>
+  </div>
+
+  <!-- ==================== ROLE FINDER ==================== -->
+  <div id="page-rolefinder" class="hidden">
+    <div class="page-header">
+      <h1 data-i18n="rf.title">🔍 Role Finder</h1>
+      <p data-i18n="rf.subtitle">Discover which roles match your background — powered by AI</p>
+    </div>
+
+    <!-- INPUT SECTION -->
+    <div class="card" id="rfInput">
+      <h3 data-i18n="rf.inputTitle">📝 Tell us about your background</h3>
+      <p style="color:var(--text2);margin-bottom:1rem;font-size:0.9rem;line-height:1.6;" data-i18n="rf.inputDesc">Describe your work experience, education, skills, and any certifications. The more detail you provide, the better the match.</p>
+      
+      <div class="form-group">
+        <label data-i18n="rf.bgLabel">Your professional background</label>
+        <textarea id="rfBackground" rows="8" data-i18n-ph="rf.bgPlaceholder" placeholder="Example: I have 5 years of experience in marketing, including social media management, content creation, and campaign analytics. I hold a Bachelor's in Communications and have used tools like Google Analytics, Hootsuite, and HubSpot. I also have experience managing a small team of 3 people."></textarea>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="analyzeRoles()" id="rfAnalyzeBtn">
+          🔍 <span data-i18n="rf.analyzeBtn">Find My Roles</span>
+        </button>
+        <span style="font-size:0.8rem;color:var(--text2);" id="rfTierNote"></span>
+      </div>
+    </div>
+
+    <!-- RESULTS SECTION (hidden until analysis) -->
+    <div id="rfResults" class="hidden">
+
+      <!-- Summary (Pro/Premium) -->
+      <div class="card hidden" id="rfSummaryCard">
+        <h3>📊 <span data-i18n="rf.profileSummary">Your Profile Summary</span></h3>
+        <p id="rfSummaryText" style="color:var(--text2);line-height:1.7;"></p>
+      </div>
+
+      <!-- Matching Roles -->
+      <div class="card">
+        <h3>🎯 <span data-i18n="rf.matchingRoles">Matching Roles</span></h3>
+        <div id="rfRolesList"></div>
+      </div>
+
+      <!-- Locked Teaser (Free only) -->
+      <div class="card hidden" id="rfLockedCard">
+        <div style="text-align:center;padding:1.5rem;">
+          <div style="font-size:2rem;margin-bottom:0.75rem;">🔒</div>
+          <h3 style="margin-bottom:0.75rem;" data-i18n="rf.lockedTitle">Unlock Full Role Insights</h3>
+          <p style="color:var(--text2);margin-bottom:0.5rem;" data-i18n="rf.lockedDesc">Upgrade to Pro for 3-5 detailed role matches with explanations, skill gap analysis, and actionable recommendations.</p>
+          <div id="rfLockedRoles" style="margin:1rem 0;"></div>
+          <p style="color:var(--accent);font-weight:600;font-size:0.85rem;" data-i18n="rf.lockedCta">Pro includes detailed explanations for each match</p>
+        </div>
+      </div>
+
+      <!-- Career Growth (Premium only) -->
+      <div class="card hidden" id="rfGrowthCard">
+        <h3>🚀 <span data-i18n="rf.careerGrowth">Career Growth Plan</span></h3>
+        <div id="rfGrowthList"></div>
+      </div>
+
+      <!-- Higher Roles (Premium only) -->
+      <div class="card hidden" id="rfHigherCard">
+        <h3>⭐ <span data-i18n="rf.higherRoles">Aspirational Roles</span></h3>
+        <p style="color:var(--text2);margin-bottom:1rem;font-size:0.9rem;" data-i18n="rf.higherDesc">With targeted improvements, you could qualify for these higher-level positions:</p>
+        <div id="rfHigherList"></div>
+      </div>
+
+      <!-- Try Again -->
+      <div style="text-align:center;margin-top:1rem;">
+        <button class="btn btn-outline" onclick="resetRoleFinder()">🔄 <span data-i18n="rf.tryAgain">Analyze Again</span></button>
+      </div>
     </div>
   </div>
 
@@ -898,6 +1002,31 @@ const T = {
     // Common
     'common.copy': '📋 Copy', 'common.pdf': '📥 PDF', 'common.cancel': 'Cancel',
     'q.questions': 'questions',
+    // Role Finder
+    'nav.rolefinder': 'Role Finder',
+    'rf.title': '🔍 Role Finder', 'rf.subtitle': 'Discover which roles match your background — powered by AI',
+    'rf.inputTitle': '📝 Tell us about your background',
+    'rf.inputDesc': 'Describe your work experience, education, skills, and any certifications. The more detail you provide, the better the match.',
+    'rf.bgLabel': 'Your professional background',
+    'rf.bgPlaceholder': 'Example: I have 5 years of experience in marketing, including social media management, content creation, and campaign analytics. I hold a Bachelor\'s in Communications and have used tools like Google Analytics, Hootsuite, and HubSpot. I also have experience managing a small team of 3 people.',
+    'rf.analyzeBtn': 'Find My Roles',
+    'rf.profileSummary': 'Your Profile Summary',
+    'rf.matchingRoles': 'Matching Roles',
+    'rf.lockedTitle': 'Unlock Full Role Insights',
+    'rf.lockedDesc': 'Upgrade to Pro for 3-5 detailed role matches with explanations, skill gap analysis, and actionable recommendations.',
+    'rf.lockedCta': 'Pro includes detailed explanations for each match',
+    'rf.careerGrowth': 'Career Growth Plan',
+    'rf.higherRoles': 'Aspirational Roles',
+    'rf.higherDesc': 'With targeted improvements, you could qualify for these higher-level positions:',
+    'rf.tryAgain': 'Analyze Again',
+    'rf.tierFree': 'Free: 1 matching role',
+    'rf.tierPro': 'Pro: 3-5 roles with detailed analysis',
+    'rf.tierPremium': 'Premium: Full career growth plan',
+    'rf.loading': 'AI is analyzing your profile...',
+    'rf.matchLabel': 'match', 'rf.matching': 'Matching skills', 'rf.missing': 'Skills to develop',
+    'rf.homeTitle': 'Not sure which roles to target?',
+    'rf.homeDesc': 'Describe your background and our AI will identify the best-matching job titles for you — so you know exactly what to search for.',
+    'rf.homeBtn': 'Try Role Finder — Free',
   },
   fr: {
     // Nav
@@ -979,6 +1108,31 @@ const T = {
     // Common
     'common.copy': '📋 Copier', 'common.pdf': '📥 PDF', 'common.cancel': 'Annuler',
     'q.questions': 'questions',
+    // Role Finder
+    'nav.rolefinder': 'Trouveur de Rôles',
+    'rf.title': '🔍 Trouveur de Rôles', 'rf.subtitle': 'Découvrez quels postes correspondent à votre profil — propulsé par l\'IA',
+    'rf.inputTitle': '📝 Décrivez votre parcours',
+    'rf.inputDesc': 'Décrivez votre expérience professionnelle, formation, compétences et certifications. Plus vous donnez de détails, meilleure sera l\'analyse.',
+    'rf.bgLabel': 'Votre parcours professionnel',
+    'rf.bgPlaceholder': 'Exemple : J\'ai 5 ans d\'expérience en marketing, incluant la gestion des réseaux sociaux, la création de contenu et l\'analyse de campagnes. Je détiens un baccalauréat en communications et j\'ai utilisé Google Analytics, Hootsuite et HubSpot. J\'ai aussi géré une petite équipe de 3 personnes.',
+    'rf.analyzeBtn': 'Trouver mes rôles',
+    'rf.profileSummary': 'Résumé de votre profil',
+    'rf.matchingRoles': 'Rôles correspondants',
+    'rf.lockedTitle': 'Débloquer les analyses complètes',
+    'rf.lockedDesc': 'Passez au Pro pour 3 à 5 rôles détaillés avec explications, analyse des lacunes et recommandations concrètes.',
+    'rf.lockedCta': 'Le Pro inclut des explications détaillées pour chaque rôle',
+    'rf.careerGrowth': 'Plan de croissance de carrière',
+    'rf.higherRoles': 'Rôles aspirationnels',
+    'rf.higherDesc': 'Avec des améliorations ciblées, vous pourriez accéder à ces postes de niveau supérieur :',
+    'rf.tryAgain': 'Analyser à nouveau',
+    'rf.tierFree': 'Gratuit : 1 rôle correspondant',
+    'rf.tierPro': 'Pro : 3-5 rôles avec analyse détaillée',
+    'rf.tierPremium': 'Premium : Plan complet de croissance',
+    'rf.loading': 'L\'IA analyse votre profil...',
+    'rf.matchLabel': 'correspondance', 'rf.matching': 'Compétences correspondantes', 'rf.missing': 'Compétences à développer',
+    'rf.homeTitle': 'Pas certain quels postes cibler ?',
+    'rf.homeDesc': 'Décrivez votre parcours et notre IA identifiera les titres d\'emploi qui correspondent le mieux à votre profil — pour savoir exactement quoi chercher.',
+    'rf.homeBtn': 'Essayer le Trouveur de Rôles — Gratuit',
   }
 };
 
@@ -1203,6 +1357,7 @@ async function loadUser() {
     }
     // For now during development, grant all access
     // Later: check currentUser.plan and show gates
+    updateRfTierNote();
   } catch(e) { localStorage.removeItem('auth_token'); window.location.href = '/'; }
 }
 loadUser();
@@ -1215,7 +1370,7 @@ function showPage(page) {
   document.querySelectorAll('[id^="page-"]').forEach(p=>p.classList.add('hidden'));
   document.getElementById('page-'+page).classList.remove('hidden');
   document.querySelectorAll('.sidebar .nav-item').forEach((n,i)=>{
-    const pages=['home','docs','resume','tailor','interview'];
+    const pages=['home','rolefinder','docs','resume','tailor','interview'];
     n.classList.toggle('active', pages[i]===page);
   });
   // Load saved resumes when opening tailor page
@@ -1226,6 +1381,8 @@ function showPage(page) {
   if (page === 'interview') loadInterviewJobs();
   // Load latest resume when visiting resume page
   if (page === 'resume') loadLatestResume();
+  // Update tier note when visiting role finder
+  if (page === 'rolefinder') updateRfTierNote();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -2498,6 +2655,166 @@ function resetInterview() {
   document.getElementById('interviewSetup').classList.remove('hidden');
   document.getElementById('interviewSession').classList.add('hidden');
   interviewData=null; currentQuestion=0; scores=[]; deliveryScores=[];
+}
+
+// ===================== ROLE FINDER =====================
+
+function updateRfTierNote() {
+  const plan = currentUser?.plan || 'none';
+  const el = document.getElementById('rfTierNote');
+  if (!el) return;
+  if (plan === 'premium') el.textContent = '⭐ ' + t('rf.tierPremium');
+  else if (plan === 'pro') el.textContent = '💎 ' + t('rf.tierPro');
+  else el.textContent = '🆓 ' + t('rf.tierFree');
+}
+
+async function analyzeRoles() {
+  const bg = document.getElementById('rfBackground').value.trim();
+  if (bg.length < 30) {
+    alert(currentLang === 'fr' ? 'Veuillez fournir au moins quelques phrases décrivant votre parcours.' : 'Please provide at least a few sentences about your background.');
+    return;
+  }
+
+  const btn = document.getElementById('rfAnalyzeBtn');
+  btn.disabled = true;
+  showLoading(t('rf.loading'));
+
+  try {
+    const r = await fetch(API + '/api/role-finder/analyze', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ background: bg, language: currentLang })
+    });
+    const d = await r.json();
+    hideLoading();
+    btn.disabled = false;
+
+    if (!r.ok || !d.success) {
+      alert(d.error || 'Analysis failed. Please try again.');
+      return;
+    }
+
+    renderRoleResults(d.result);
+  } catch (e) {
+    hideLoading();
+    btn.disabled = false;
+    alert('Connection error. Please try again.');
+    console.error('Role finder error:', e);
+  }
+}
+
+function renderRoleResults(data) {
+  const tier = data.tier || 'free';
+
+  // Show results, hide input
+  document.getElementById('rfInput').classList.add('hidden');
+  document.getElementById('rfResults').classList.remove('hidden');
+
+  // === Summary (Pro/Premium only) ===
+  const summaryCard = document.getElementById('rfSummaryCard');
+  if (data.summary && (tier === 'pro' || tier === 'premium')) {
+    summaryCard.classList.remove('hidden');
+    document.getElementById('rfSummaryText').textContent = data.summary;
+  } else {
+    summaryCard.classList.add('hidden');
+  }
+
+  // === Matching Roles ===
+  const rolesList = document.getElementById('rfRolesList');
+  rolesList.innerHTML = '';
+
+  (data.roles || []).forEach(role => {
+    const pct = role.match_pct || 0;
+    const ringClass = pct >= 80 ? 'high' : pct >= 65 ? 'med' : 'low';
+
+    let detailHtml = '';
+    if (tier !== 'free' && role.explanation) {
+      detailHtml += `<div class="rf-explanation">${escHtml(role.explanation)}</div>`;
+    }
+    if (tier !== 'free' && role.matching_skills?.length) {
+      detailHtml += `<div class="rf-skills"><span style="font-size:0.8rem;color:var(--text2);margin-right:0.25rem;">✅ ${t('rf.matching')}:</span>`;
+      role.matching_skills.forEach(s => { detailHtml += `<span class="tag tag-green">${escHtml(s)}</span>`; });
+      detailHtml += '</div>';
+    }
+    if (tier !== 'free' && role.missing_skills?.length) {
+      detailHtml += `<div class="rf-skills"><span style="font-size:0.8rem;color:var(--text2);margin-right:0.25rem;">📈 ${t('rf.missing')}:</span>`;
+      role.missing_skills.forEach(s => { detailHtml += `<span class="tag tag-red">${escHtml(s)}</span>`; });
+      detailHtml += '</div>';
+    }
+
+    rolesList.innerHTML += `
+      <div class="rf-role">
+        <div class="rf-role-header">
+          <div class="rf-match-ring ${ringClass}">${pct}%</div>
+          <div>
+            <div class="rf-role-title">${escHtml(role.title)}</div>
+            <div style="font-size:0.8rem;color:var(--text2);">${pct}% ${t('rf.matchLabel')}</div>
+          </div>
+        </div>
+        ${detailHtml}
+      </div>`;
+  });
+
+  // === Locked Teaser (Free only) ===
+  const lockedCard = document.getElementById('rfLockedCard');
+  if (tier === 'free' && data.locked_roles?.length) {
+    lockedCard.classList.remove('hidden');
+    const lockedHtml = data.locked_roles.map(r => `<span class="rf-locked-role">🔒 ${escHtml(r)}</span>`).join('');
+    document.getElementById('rfLockedRoles').innerHTML = lockedHtml;
+  } else {
+    lockedCard.classList.add('hidden');
+  }
+
+  // === Career Growth (Premium only) ===
+  const growthCard = document.getElementById('rfGrowthCard');
+  if (tier === 'premium' && data.career_growth?.length) {
+    growthCard.classList.remove('hidden');
+    const growthList = document.getElementById('rfGrowthList');
+    growthList.innerHTML = '';
+    data.career_growth.forEach(g => {
+      const pCls = g.priority === 'high' ? 'rf-priority-high' : g.priority === 'medium' ? 'rf-priority-medium' : 'rf-priority-low';
+      growthList.innerHTML += `
+        <div class="rf-growth-item">
+          <div class="rf-priority ${pCls}">${(g.priority || 'medium').toUpperCase()}</div>
+          <div style="font-weight:600;margin-bottom:0.35rem;">${escHtml(g.action)}</div>
+          <div style="color:var(--text2);font-size:0.9rem;line-height:1.5;">${escHtml(g.impact)}</div>
+        </div>`;
+    });
+  } else {
+    growthCard.classList.add('hidden');
+  }
+
+  // === Higher Roles (Premium only) ===
+  const higherCard = document.getElementById('rfHigherCard');
+  if (tier === 'premium' && data.higher_roles?.length) {
+    higherCard.classList.remove('hidden');
+    const higherList = document.getElementById('rfHigherList');
+    higherList.innerHTML = '';
+    data.higher_roles.forEach(hr => {
+      higherList.innerHTML += `
+        <div class="rf-higher-role">
+          <div style="font-weight:600;color:#c084fc;margin-bottom:0.35rem;">⭐ ${escHtml(hr.title)}</div>
+          <div style="color:var(--text2);font-size:0.9rem;line-height:1.5;">${escHtml(hr.requirements_gap)}</div>
+        </div>`;
+    });
+  } else {
+    higherCard.classList.add('hidden');
+  }
+}
+
+function resetRoleFinder() {
+  document.getElementById('rfInput').classList.remove('hidden');
+  document.getElementById('rfResults').classList.add('hidden');
+  document.getElementById('rfSummaryCard').classList.add('hidden');
+  document.getElementById('rfLockedCard').classList.add('hidden');
+  document.getElementById('rfGrowthCard').classList.add('hidden');
+  document.getElementById('rfHigherCard').classList.add('hidden');
+  document.getElementById('rfRolesList').innerHTML = '';
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
