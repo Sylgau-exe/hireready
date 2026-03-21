@@ -242,11 +242,12 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
   <p class="section-sub">No hidden fees. Full access from day one.</p>
   <div class="price-toggle">
     <button class="active" onclick="togglePricing('monthly')">Monthly</button>
-    <button onclick="togglePricing('annual')">Annual / Lifetime</button>
+    <button onclick="togglePricing('annual')">Annual</button>
   </div>
   <div class="pricing-grid" id="pricing-cards">
     <!-- Filled by JS -->
   </div>
+  <p style="text-align:center;color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:1rem;">All prices in $US. Cancel anytime.</p>
 </section>
 
 <!-- FINAL CTA -->
@@ -330,14 +331,14 @@ const API = '';
 // Pricing data
 const pricing = {
   monthly: [
-    { name:'Free', price:'$0', sub:'', features:['Create your resume','Professional formatting','PDF export','Bilingual EN/FR'], cta:'Get Started', free:true },
-    { name:'Pro', price:'$19', sub:'/month', features:['Resume optimization vs job target','ATS score analysis','Custom cover letter','Keyword recommendations'], cta:'Go Pro', featured:true },
-    { name:'Premium', price:'$29', sub:'/month', features:['Everything in Pro','Interview preparation','Interview simulation','Answer coaching','Voice feedback'], cta:'Go Premium' }
+    { name:'Free', price:'$0', sub:'', features:['Create & download your resume','General cover letter','Role Finder — 1 matching role','Interview — 1 question + score','Bilingual EN/FR'], cta:'Get Started', free:true },
+    { name:'Pro', price:'$19', sub:'/mo', features:['Role Finder — 3-5 roles with analysis','Tailored resume for each job','ATS score + optimization','Custom cover letter per job','Interview — 3 questions + feedback'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$39', sub:'/mo', features:['Everything in Pro','Deep role analysis + comparisons','Full interview with improvement tips','Hiring probability assessment','Career growth plan + strategic insights'], cta:'Go Premium' }
   ],
   annual: [
-    { name:'Free', price:'$0', sub:'', features:['Create your resume','Professional formatting','PDF export','Bilingual EN/FR'], cta:'Get Started', free:true },
-    { name:'Pro', price:'$149', sub:'/year', features:['Resume optimization vs job target','ATS score analysis','Custom cover letter','Keyword recommendations','Save $79/year'], cta:'Go Pro', featured:true },
-    { name:'Premium', price:'$269', sub:' lifetime', features:['Everything in Pro','Interview preparation','Interview simulation','Answer coaching','Voice feedback','Unlimited forever'], cta:'Go Premium' }
+    { name:'Free', price:'$0', sub:'', features:['Create & download your resume','General cover letter','Role Finder — 1 matching role','Interview — 1 question + score','Bilingual EN/FR'], cta:'Get Started', free:true },
+    { name:'Pro', price:'$149', sub:'/yr', features:['Role Finder — 3-5 roles with analysis','Tailored resume for each job','ATS score + optimization','Custom cover letter per job','Interview — 3 questions + feedback','Save $79/year'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$269', sub:'/yr', features:['Everything in Pro','Deep role analysis + comparisons','Full interview with improvement tips','Hiring probability assessment','Career growth plan + strategic insights','Save $199/year'], cta:'Go Premium' }
   ]
 };
 
@@ -479,6 +480,11 @@ function setPageLang(lang) {
   document.querySelectorAll('.step h3').forEach((h,i) => h.textContent = stepNames[i] || '');
   // Pricing
   document.querySelector('#pricing .section-title').textContent = fr ? 'Tarification Simple et Transparente' : 'Simple, Transparent Pricing';
+  document.querySelector('#pricing .section-sub').textContent = fr ? 'Aucuns frais cachés. Accès complet dès le premier jour.' : 'No hidden fees. Full access from day one.';
+  const priceBtns = document.querySelectorAll('.price-toggle button');
+  if (priceBtns.length >= 2) { priceBtns[0].textContent = fr ? 'Mensuel' : 'Monthly'; priceBtns[1].textContent = fr ? 'Annuel' : 'Annual'; }
+  const cancelNote = document.querySelector('#pricing > p:last-of-type');
+  if (cancelNote) cancelNote.textContent = fr ? 'Tous les prix en $US. Annulez à tout moment.' : 'All prices in $US. Cancel anytime.';
   // CTA
   document.querySelector('.final-cta h2').innerHTML = fr ? 'Prêt à Décrocher Cette <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Entrevue</span> ?' : 'Ready to Land That <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Interview</span>?';
   document.querySelector('.final-cta p').textContent = fr ? 'Rejoignez les chercheurs d\'emploi qui ont arrêté de deviner et ont commencé à recevoir des rappels.' : 'Join thousands of job seekers who stopped guessing and started getting callbacks.';
