@@ -86,7 +86,6 @@ section { padding:6rem 2rem; max-width:1100px; margin:0 auto; }
 .price-card .price span { font-size:0.9rem; color:var(--text2); font-family:'DM Sans',sans-serif; }
 .price-card ul { list-style:none; margin:1.5rem 0; }
 .price-card li { padding:0.4rem 0; color:var(--text2); font-size:0.9rem; display:flex; align-items:center; gap:0.5rem; }
-.price-card li::before { content:'✓'; color:var(--success); font-weight:700; }
 .price-toggle { display:flex; gap:0.5rem; justify-content:center; margin-bottom:2rem; background:var(--card); padding:0.25rem; border-radius:8px; border:1px solid var(--border); width:fit-content; margin-left:auto; margin-right:auto; }
 .price-toggle button { padding:0.5rem 1.5rem; border:none; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:500; background:transparent; color:var(--text2); transition:all 0.2s; }
 .price-toggle button.active { background:var(--gradient); color:#fff; }
@@ -247,7 +246,6 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
   <div class="pricing-grid" id="pricing-cards">
     <!-- Filled by JS -->
   </div>
-  <p style="text-align:center;color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:1rem;">All prices in $US. Cancel anytime.</p>
 </section>
 
 <!-- FINAL CTA -->
@@ -331,14 +329,14 @@ const API = '';
 // Pricing data
 const pricing = {
   monthly: [
-    { name:'Free', price:'$0', sub:'', features:['Create & download your resume','General cover letter','Role Finder — 1 matching role','Interview — 1 question + score','Bilingual EN/FR'], cta:'Get Started', free:true },
-    { name:'Pro', price:'$19', sub:'/mo', features:['Role Finder — 3-5 roles with analysis','Tailored resume for each job','ATS score + optimization','Custom cover letter per job','Interview — 3 questions + feedback'], cta:'Go Pro', featured:true },
-    { name:'Premium', price:'$39', sub:'/mo', features:['Everything in Pro','Deep role analysis + comparisons','Full interview with improvement tips','Hiring probability assessment','Career growth plan + strategic insights'], cta:'Go Premium' }
+    { name:'Free', price:'$0', sub:'', features:['Create & download your resume','General cover letter','Role Finder — 1 matching role','Interview — 1 question + score','Multilingual CV'], cta:'Get Started', free:true },
+    { name:'Pro', price:'$19', sub:'/mo', features:['Role Finder — 3-5 roles with analysis','Tailored resume for each job','ATS match score','CV optimization','Custom cover letter per job','Interview — 3 questions + satisfaction score %'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$39', sub:'/mo', features:['Deep role analysis + comparisons','Full interview with improvement tips','Hiring probability assessment','Career growth plan + strategic insights'], cta:'Go Premium' }
   ],
   annual: [
-    { name:'Free', price:'$0', sub:'', features:['Create & download your resume','General cover letter','Role Finder — 1 matching role','Interview — 1 question + score','Bilingual EN/FR'], cta:'Get Started', free:true },
-    { name:'Pro', price:'$149', sub:'/yr', features:['Role Finder — 3-5 roles with analysis','Tailored resume for each job','ATS score + optimization','Custom cover letter per job','Interview — 3 questions + feedback','Save $79/year'], cta:'Go Pro', featured:true },
-    { name:'Premium', price:'$269', sub:'/yr', features:['Everything in Pro','Deep role analysis + comparisons','Full interview with improvement tips','Hiring probability assessment','Career growth plan + strategic insights','Save $199/year'], cta:'Go Premium' }
+    { name:'Free', price:'$0', sub:'', features:['Create & download your resume','General cover letter','Role Finder — 1 matching role','Interview — 1 question + score','Multilingual CV'], cta:'Get Started', free:true },
+    { name:'Pro', price:'$149', sub:'/yr', features:['Role Finder — 3-5 roles with analysis','Tailored resume for each job','ATS match score','CV optimization','Custom cover letter per job','Interview — 3 questions + satisfaction score %','Save $79/year'], cta:'Go Pro', featured:true },
+    { name:'Premium', price:'$269', sub:'/yr', features:['Deep role analysis + comparisons','Full interview with improvement tips','Hiring probability assessment','Career growth plan + strategic insights','Save $199/year'], cta:'Go Premium' }
   ]
 };
 
@@ -346,12 +344,15 @@ function togglePricing(type) {
   document.querySelectorAll('.price-toggle button').forEach((b,i) => {
     b.classList.toggle('active', (type==='monthly'&&i===0)||(type==='annual'&&i===1));
   });
+  const isFr = localStorage.getItem('hr_lang') === 'fr';
+  const cancelTxt = isFr ? 'Tous les prix en $US. Annulez à tout moment.' : 'All prices in $US. Cancel anytime.';
   const cards = pricing[type].map(p => `
     <div class="price-card ${p.featured?'featured':''}">
       ${p.featured?'<div class="popular-badge">Most Popular</div>':''}
       <h3>${p.name}</h3>
       <div class="price">${p.price}<span>${p.sub}</span></div>
-      <ul>${p.features.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-0.5rem 0 1rem;text-align:center;">${cancelTxt}</div>
+      <ul>${p.features.map(f=>`<li>${p.free?'✓':'+'} ${f}</li>`).join('')}</ul>
       <button class="btn ${p.featured?'btn-primary':'btn-outline'} btn-block" onclick="showModal('register')">${p.cta}</button>
     </div>
   `).join('');
@@ -483,8 +484,6 @@ function setPageLang(lang) {
   document.querySelector('#pricing .section-sub').textContent = fr ? 'Aucuns frais cachés. Accès complet dès le premier jour.' : 'No hidden fees. Full access from day one.';
   const priceBtns = document.querySelectorAll('.price-toggle button');
   if (priceBtns.length >= 2) { priceBtns[0].textContent = fr ? 'Mensuel' : 'Monthly'; priceBtns[1].textContent = fr ? 'Annuel' : 'Annual'; }
-  const cancelNote = document.querySelector('#pricing > p:last-of-type');
-  if (cancelNote) cancelNote.textContent = fr ? 'Tous les prix en $US. Annulez à tout moment.' : 'All prices in $US. Cancel anytime.';
   // CTA
   document.querySelector('.final-cta h2').innerHTML = fr ? 'Prêt à Décrocher Cette <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Entrevue</span> ?' : 'Ready to Land That <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Interview</span>?';
   document.querySelector('.final-cta p').textContent = fr ? 'Rejoignez les chercheurs d\'emploi qui ont arrêté de deviner et ont commencé à recevoir des rappels.' : 'Join thousands of job seekers who stopped guessing and started getting callbacks.';

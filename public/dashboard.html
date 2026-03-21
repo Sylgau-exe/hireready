@@ -233,30 +233,26 @@ textarea{min-height:120px;}
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="logo">HireReady</div>
+  <a href="/" class="logo" style="text-decoration:none;">HireReady</a>
   <div class="lang-toggle">
     <button class="active" onclick="setLang('en')">EN</button>
     <button onclick="setLang('fr')">FR</button>
   </div>
-  <div class="nav-item active" onclick="showPage('home')" style="margin-top:1rem;"><span class="icon">🏠</span><span data-i18n="nav.home">Home</span></div>
-  <div class="nav-item" onclick="showPage('docs')">
-    <span class="icon">📁</span><span data-i18n="nav.docs">My Documents</span>
-  </div>
+  <div class="nav-item active" onclick="showPage('home')" style="margin-top:1rem;"><span class="icon">🏠</span><span data-i18n="nav.home">Dashboard</span></div>
   <div class="nav-item" onclick="showPage('resume')">
     <span class="icon">📄</span><span data-i18n="nav.resume">My Resume</span>
-    <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
   </div>
   <div class="nav-item" onclick="showPage('rolefinder')">
     <span class="icon">🔍</span><span data-i18n="nav.rolefinder">Role Finder</span>
-    <span class="tier-badge tier-free" data-i18n="tier.free">Free</span>
   </div>
   <div class="nav-item" onclick="showPage('tailor')">
     <span class="icon">🎯</span><span data-i18n="nav.tailor">Tailor to Job</span>
-    <span class="tier-badge tier-pro">Pro</span>
   </div>
   <div class="nav-item" onclick="showPage('interview')">
     <span class="icon">🎤</span><span data-i18n="nav.interview">Interview Prep</span>
-    <span class="tier-badge tier-premium">Premium</span>
+  </div>
+  <div class="nav-item" onclick="showPage('docs')" style="margin-top:1.5rem;">
+    <span class="icon">📁</span><span data-i18n="nav.docs">My Documents</span>
   </div>
   <div class="sidebar-footer">
     <div class="user-info">
@@ -1039,7 +1035,7 @@ let currentLang = localStorage.getItem('hr_lang') || 'en';
 const T = {
   en: {
     // Nav
-    'nav.home': 'Home', 'nav.docs': 'My Documents', 'nav.resume': 'My Resume',
+    'nav.home': 'Dashboard', 'nav.docs': 'My Documents', 'nav.resume': 'My Resume',
     'nav.tailor': 'Tailor to Job', 'nav.interview': 'Interview Prep', 'nav.logout': 'Log Out',
     'tier.free': 'Free',
     // Home
@@ -1165,7 +1161,7 @@ const T = {
   },
   fr: {
     // Nav
-    'nav.home': 'Accueil', 'nav.docs': 'Mes Documents', 'nav.resume': 'Mon CV',
+    'nav.home': 'Tableau de bord', 'nav.docs': 'Mes Documents', 'nav.resume': 'Mon CV',
     'nav.tailor': 'Adapter au Poste', 'nav.interview': 'Prép. Entrevue', 'nav.logout': 'Déconnexion',
     'tier.free': 'Gratuit',
     // Home
@@ -1526,7 +1522,7 @@ function showPage(page) {
   document.querySelectorAll('[id^="page-"]').forEach(p=>p.classList.add('hidden'));
   document.getElementById('page-'+page).classList.remove('hidden');
   document.querySelectorAll('.sidebar .nav-item').forEach((n,i)=>{
-    const pages=['home','docs','resume','rolefinder','tailor','interview'];
+    const pages=['home','resume','rolefinder','tailor','interview','docs'];
     n.classList.toggle('active', pages[i]===page);
   });
   // Load saved resumes when opening tailor page
