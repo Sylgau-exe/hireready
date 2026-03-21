@@ -512,7 +512,7 @@ window.addEventListener('DOMContentLoaded', () => {
     window.location.href = '/dashboard';
   }
   if (params.get('reset_token')) showModal('reset');
-  if (localStorage.getItem('auth_token')) window.location.href = '/dashboard';
+  if (localStorage.getItem('auth_token') && !params.get('home')) window.location.href = '/dashboard';
 });
 </script>
 </body>
