@@ -140,8 +140,9 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
     <a href="#features">Features</a>
     <a href="#how">How It Works</a>
     <a href="#pricing">Pricing</a>
-    <a href="#" class="btn btn-outline" onclick="showModal('login')">Log In</a>
-    <a href="#" class="btn btn-primary" onclick="showModal('register')">Get Started</a>
+    <a href="#" class="btn btn-outline" id="navLogin" onclick="showModal('login')">Log In</a>
+    <a href="#" class="btn btn-primary" id="navRegister" onclick="showModal('register')">Get Started</a>
+    <a href="/dashboard" class="btn btn-primary" id="navDashboard" style="display:none;">Go to Dashboard →</a>
     <div style="display:flex;gap:2px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:2px;margin-left:0.5rem;">
       <button onclick="setPageLang('en')" style="padding:0.3rem 0.6rem;border:none;border-radius:4px;font-size:0.75rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#38bdf8,#818cf8);color:#fff;" id="langEn">EN</button>
       <button onclick="setPageLang('fr')" style="padding:0.3rem 0.6rem;border:none;border-radius:4px;font-size:0.75rem;font-weight:600;cursor:pointer;background:transparent;color:#94a3b8;" id="langFr">FR</button>
@@ -156,7 +157,7 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
     <h1>Stop Sending Resumes<br>Into the <span class="gradient">Void</span></h1>
     <p>AI-powered resume builder, ATS optimizer, and interview simulator. Tailored to every job posting, every country, every career stage.</p>
     <div class="hero-ctas">
-      <a href="#" class="btn btn-primary" onclick="showModal('register')">Build My Resume →</a>
+      <a href="#" class="btn btn-primary" id="heroCta" onclick="showModal('register')">Build My Resume →</a>
       <a href="#how" class="btn btn-outline">See How It Works</a>
     </div>
     <div class="social-proof">
@@ -252,7 +253,7 @@ footer { border-top:1px solid var(--border); padding:3rem 2rem; text-align:cente
 <div class="final-cta">
   <h2>Ready to Land That <span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Interview</span>?</h2>
   <p>Join thousands of job seekers who stopped guessing and started getting callbacks.</p>
-  <a href="#" class="btn btn-primary" onclick="showModal('register')" style="font-size:1.05rem;padding:0.85rem 2.5rem;">Start Building My Resume →</a>
+  <a href="#" class="btn btn-primary" id="finalCta" onclick="showModal('register')" style="font-size:1.05rem;padding:0.85rem 2.5rem;">Start Building My Resume →</a>
 </div>
 
 <footer>
@@ -353,12 +354,17 @@ function togglePricing(type) {
       <div class="price">${p.price}<span>${p.sub}</span></div>
       <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-0.5rem 0 1rem;text-align:left;">${cancelTxt}</div>
       <ul>${p.features.map(f=>`<li>${p.free?'<span style="color:#34d399;font-weight:700;">✓</span>':'<span style="color:#f87171;font-weight:700;">+</span>'} ${f}</li>`).join('')}</ul>
-      <button class="btn ${p.featured?'btn-primary':'btn-outline'} btn-block" onclick="showModal('register')">${p.cta}</button>
+      <button class="btn ${p.featured?'btn-primary':'btn-outline'} btn-block" onclick="pricingAction()">${p.cta}</button>
     </div>
   `).join('');
   document.getElementById('pricing-cards').innerHTML = cards;
 }
 togglePricing('monthly');
+
+function pricingAction() {
+  if (localStorage.getItem('auth_token')) window.location.href = '/dashboard';
+  else showModal('register');
+}
 
 // Auth
 function showModal(form) {
@@ -513,6 +519,16 @@ window.addEventListener('DOMContentLoaded', () => {
   }
   if (params.get('reset_token')) showModal('reset');
   if (localStorage.getItem('auth_token') && !params.get('home')) window.location.href = '/dashboard';
+  // If logged in and viewing landing page, show Dashboard button
+  if (localStorage.getItem('auth_token')) {
+    document.getElementById('navLogin').style.display = 'none';
+    document.getElementById('navRegister').style.display = 'none';
+    document.getElementById('navDashboard').style.display = '';
+    const hero = document.getElementById('heroCta');
+    if (hero) { hero.href = '/dashboard'; hero.onclick = null; hero.textContent = 'Go to Dashboard →'; }
+    const final = document.getElementById('finalCta');
+    if (final) { final.href = '/dashboard'; final.onclick = null; final.textContent = 'Go to Dashboard →'; }
+  }
 });
 </script>
 </body>
