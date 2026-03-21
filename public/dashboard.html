@@ -125,7 +125,6 @@ textarea{min-height:120px;}
 .rf-role-title{font-size:1.05rem;font-weight:600;}
 .rf-explanation{color:var(--text2);font-size:0.9rem;line-height:1.6;margin-bottom:0.75rem;}
 .rf-skills{display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.5rem;}
-.rf-locked-role{display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:var(--bg);border:1px dashed var(--border);border-radius:8px;margin:0.25rem;color:var(--text2);font-size:0.9rem;filter:blur(1.5px);user-select:none;}
 .rf-growth-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:0.75rem;}
 .rf-growth-item .rf-priority{display:inline-block;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;padding:0.15rem 0.5rem;border-radius:4px;margin-bottom:0.5rem;}
 .rf-priority-high{background:rgba(248,113,113,0.12);color:var(--danger);}
@@ -383,12 +382,36 @@ textarea{min-height:120px;}
 
       <!-- Locked Teaser (Free only) -->
       <div class="card hidden" id="rfLockedCard">
-        <div style="text-align:center;padding:1.5rem;">
-          <div style="font-size:2rem;margin-bottom:0.75rem;">🔒</div>
-          <h3 style="margin-bottom:0.75rem;" data-i18n="rf.lockedTitle">Unlock Full Role Insights</h3>
-          <p style="color:var(--text2);margin-bottom:0.5rem;" data-i18n="rf.lockedDesc">Upgrade to Pro for 3-5 detailed role matches with explanations, skill gap analysis, and actionable recommendations.</p>
-          <div id="rfLockedRoles" style="margin:1rem 0;"></div>
-          <p style="color:var(--accent);font-weight:600;font-size:0.85rem;" data-i18n="rf.lockedCta">Pro includes detailed explanations for each match</p>
+        <div style="text-align:center;padding:1rem 1.5rem 0.5rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+          <h3 style="margin-bottom:0.5rem;" data-i18n="rf.lockedTitle">Unlock Full Role Insights</h3>
+          <p style="color:var(--text2);margin-bottom:1.25rem;font-size:0.9rem;" data-i18n="rf.lockedDesc">Upgrade to Pro to get the complete picture of your career fit.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;padding:0 0.5rem 1.5rem;">
+          <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--bg);border:1px solid rgba(56,189,248,0.2);border-radius:10px;">
+            <span style="font-size:1.5rem;flex-shrink:0;">🎯</span>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;" data-i18n="rf.lock1Title">3 to 5 matching roles</div>
+              <div style="color:var(--text2);font-size:0.82rem;line-height:1.4;" data-i18n="rf.lock1Desc">See all roles that fit your experience, ranked by match percentage.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--bg);border:1px solid rgba(129,140,248,0.2);border-radius:10px;">
+            <span style="font-size:1.5rem;flex-shrink:0;">💡</span>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;" data-i18n="rf.lock2Title">Why each role fits you</div>
+              <div style="color:var(--text2);font-size:0.82rem;line-height:1.4;" data-i18n="rf.lock2Desc">Detailed explanation linking your specific skills and experience to each role.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--bg);border:1px solid rgba(192,132,252,0.2);border-radius:10px;">
+            <span style="font-size:1.5rem;flex-shrink:0;">📈</span>
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.2rem;" data-i18n="rf.lock3Title">Skill gaps to close</div>
+              <div style="color:var(--text2);font-size:0.82rem;line-height:1.4;" data-i18n="rf.lock3Desc">Know exactly which skills you're missing — so you can work on them.</div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:0 1.5rem 1.5rem;">
+          <button class="btn btn-primary btn-block" onclick="upgradeTo('pro')">⚡ <span data-i18n="rf.upgradeBtn">Upgrade to Pro</span></button>
         </div>
       </div>
 
@@ -1037,8 +1060,11 @@ const T = {
     'rf.profileSummary': 'Your Profile Summary',
     'rf.matchingRoles': 'Matching Roles',
     'rf.lockedTitle': 'Unlock Full Role Insights',
-    'rf.lockedDesc': 'Upgrade to Pro for 3-5 detailed role matches with explanations, skill gap analysis, and actionable recommendations.',
-    'rf.lockedCta': 'Pro includes detailed explanations for each match',
+    'rf.lockedDesc': 'Upgrade to Pro to get the complete picture of your career fit.',
+    'rf.lock1Title': '3 to 5 matching roles', 'rf.lock1Desc': 'See all roles that fit your experience, ranked by match percentage.',
+    'rf.lock2Title': 'Why each role fits you', 'rf.lock2Desc': 'Detailed explanation linking your specific skills and experience to each role.',
+    'rf.lock3Title': 'Skill gaps to close', 'rf.lock3Desc': 'Know exactly which skills you\'re missing — so you can work on them.',
+    'rf.upgradeBtn': 'Upgrade to Pro',
     'rf.careerGrowth': 'Career Growth Plan',
     'rf.higherRoles': 'Aspirational Roles',
     'rf.higherDesc': 'With targeted improvements, you could qualify for these higher-level positions:',
@@ -1149,8 +1175,11 @@ const T = {
     'rf.profileSummary': 'Résumé de votre profil',
     'rf.matchingRoles': 'Rôles correspondants',
     'rf.lockedTitle': 'Débloquer les analyses complètes',
-    'rf.lockedDesc': 'Passez au Pro pour 3 à 5 rôles détaillés avec explications, analyse des lacunes et recommandations concrètes.',
-    'rf.lockedCta': 'Le Pro inclut des explications détaillées pour chaque rôle',
+    'rf.lockedDesc': 'Passez au Pro pour obtenir le portrait complet de votre adéquation de carrière.',
+    'rf.lock1Title': '3 à 5 rôles correspondants', 'rf.lock1Desc': 'Voyez tous les rôles qui correspondent à votre expérience, classés par pourcentage.',
+    'rf.lock2Title': 'Pourquoi chaque rôle vous convient', 'rf.lock2Desc': 'Explication détaillée reliant vos compétences et votre expérience à chaque rôle.',
+    'rf.lock3Title': 'Lacunes à combler', 'rf.lock3Desc': 'Identifiez exactement les compétences qui vous manquent — pour y travailler.',
+    'rf.upgradeBtn': 'Passer au Pro',
     'rf.careerGrowth': 'Plan de croissance de carrière',
     'rf.higherRoles': 'Rôles aspirationnels',
     'rf.higherDesc': 'Avec des améliorations ciblées, vous pourriez accéder à ces postes de niveau supérieur :',
@@ -2869,10 +2898,8 @@ function renderRoleResults(data) {
 
   // === Locked Teaser (Free only) ===
   const lockedCard = document.getElementById('rfLockedCard');
-  if (tier === 'free' && data.locked_roles?.length) {
+  if (tier === 'free') {
     lockedCard.classList.remove('hidden');
-    const lockedHtml = data.locked_roles.map(r => `<span class="rf-locked-role">🔒 ${escHtml(r)}</span>`).join('');
-    document.getElementById('rfLockedRoles').innerHTML = lockedHtml;
   } else {
     lockedCard.classList.add('hidden');
   }

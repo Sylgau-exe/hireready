@@ -106,14 +106,12 @@ export default async function handler(req, res) {
     tierInstruction = `TIER: FREE
 Return exactly 1 matching role with a match percentage (0-100).
 Do NOT provide explanations, missing skills, or career advice.
-Also return 3 additional role NAMES only (no details) as "locked_roles" to tease the upgrade.
 
 JSON format:
 {
   "roles": [
     { "title": "...", "match_pct": 85 }
   ],
-  "locked_roles": ["Role Name 2", "Role Name 3", "Role Name 4"],
   "tier": "free"
 }`;
   } else if (tier === 'pro') {
