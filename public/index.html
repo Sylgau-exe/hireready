@@ -351,8 +351,8 @@ function togglePricing(type) {
       ${p.featured?'<div class="popular-badge">Most Popular</div>':''}
       <h3>${p.name}</h3>
       <div class="price">${p.price}<span>${p.sub}</span></div>
-      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-0.5rem 0 1rem;text-align:center;">${cancelTxt}</div>
-      <ul>${p.features.map(f=>`<li>${p.free?'✓':'+'} ${f}</li>`).join('')}</ul>
+      <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin:-0.5rem 0 1rem;text-align:left;">${cancelTxt}</div>
+      <ul>${p.features.map(f=>`<li>${p.free?'<span style="color:#34d399;font-weight:700;">✓</span>':'<span style="color:#f87171;font-weight:700;">+</span>'} ${f}</li>`).join('')}</ul>
       <button class="btn ${p.featured?'btn-primary':'btn-outline'} btn-block" onclick="showModal('register')">${p.cta}</button>
     </div>
   `).join('');
