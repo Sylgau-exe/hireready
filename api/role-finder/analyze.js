@@ -4,6 +4,50 @@ import { getUserFromRequest, cors } from '../../lib/auth.js';
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
+// Build readable text from a resume DB row
+function buildResumeText(res) {
+  let text = '';
+  if (res.full_name) text += res.full_name + '\n';
+  if (res.email) text += res.email + '\n';
+  if (res.phone) text += res.phone + '\n';
+  if (res.location) text += res.location + '\n';
+  if (res.linkedin_url) text += res.linkedin_url + '\n';
+  if (res.summary) text += '\nPROFESSIONAL SUMMARY\n' + res.summary + '\n';
+
+  const exp = typeof res.experience === 'string' ? JSON.parse(res.experience) : (res.experience || []);
+  if (exp.length) {
+    text += '\nEXPERIENCE\n';
+    exp.forEach(e => {
+      if (typeof e === 'string') { text += e + '\n'; }
+      else {
+        text += `${e.title||''}, ${e.company||''}, ${e.location||''}, ${e.startDate||e.start_date||''} – ${e.endDate||e.end_date||'Present'}\n`;
+        (e.bullets||[]).forEach(b => text += '- ' + b + '\n');
+        text += '\n';
+      }
+    });
+  }
+
+  const edu = typeof res.education === 'string' ? JSON.parse(res.education) : (res.education || []);
+  if (edu.length) {
+    text += '\nEDUCATION\n';
+    edu.forEach(e => {
+      if (typeof e === 'string') { text += e + '\n'; }
+      else { text += `${e.degree||''}, ${e.school||''}, ${e.year||''}\n`; }
+    });
+  }
+
+  const skills = typeof res.skills === 'string' ? JSON.parse(res.skills) : (res.skills || []);
+  if (skills.length) text += '\nSKILLS\n' + skills.join(', ') + '\n';
+
+  const certs = typeof res.certifications === 'string' ? JSON.parse(res.certifications) : (res.certifications || []);
+  if (certs.length) text += '\nCERTIFICATIONS\n' + certs.join(', ') + '\n';
+
+  const langs = typeof res.languages === 'string' ? JSON.parse(res.languages) : (res.languages || []);
+  if (langs.length) text += '\nLANGUAGES\n' + langs.join(', ') + '\n';
+
+  return text.trim();
+}
+
 export default async function handler(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -12,9 +56,32 @@ export default async function handler(req, res) {
   const decoded = getUserFromRequest(req);
   if (!decoded) return res.status(401).json({ error: 'Authentication required' });
 
-  const { background, language } = req.body;
-  if (!background || background.trim().length < 30) {
-    return res.status(400).json({ error: 'Please provide at least a few sentences about your background.' });
+  const { resume_id, background, language } = req.body;
+
+  // Build background text: from resume_id (preferred) or manual text
+  let backgroundText = '';
+
+  if (resume_id) {
+    try {
+      const result = await sql`
+        SELECT full_name, email, phone, location, linkedin_url, summary,
+               experience, education, skills, certifications, languages
+        FROM resumes WHERE id = ${resume_id} AND user_id = ${decoded.userId}
+      `;
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Resume not found.' });
+      }
+      backgroundText = buildResumeText(result.rows[0]);
+    } catch (e) {
+      console.error('Failed to fetch resume:', e);
+      return res.status(500).json({ error: 'Failed to load resume data.' });
+    }
+  } else if (background) {
+    backgroundText = background.trim();
+  }
+
+  if (backgroundText.length < 30) {
+    return res.status(400).json({ error: 'Please select a resume or provide at least a few sentences about your background.' });
   }
 
   // Fetch user plan from DB
@@ -135,7 +202,7 @@ Respond with ONLY valid JSON. No markdown backticks, no preamble, no explanation
         max_tokens: 2000,
         messages: [{
           role: 'user',
-          content: `Analyze this person's professional background and find matching roles:\n\n${background.substring(0, 4000)}`
+          content: `Analyze this person's professional background and find matching roles:\n\n${backgroundText.substring(0, 4000)}`
         }],
         system: systemPrompt
       })

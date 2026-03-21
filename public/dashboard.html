@@ -335,12 +335,27 @@ textarea{min-height:120px;}
 
     <!-- INPUT SECTION -->
     <div class="card" id="rfInput">
-      <h3 data-i18n="rf.inputTitle">📝 Tell us about your background</h3>
-      <p style="color:var(--text2);margin-bottom:1rem;font-size:0.9rem;line-height:1.6;" data-i18n="rf.inputDesc">Describe your work experience, education, skills, and any certifications. The more detail you provide, the better the match.</p>
+      <h3 data-i18n="rf.inputTitle">📝 Your background</h3>
+      <p style="color:var(--text2);margin-bottom:1rem;font-size:0.9rem;line-height:1.6;" data-i18n="rf.inputDesc">Select a resume you've already built, or paste your background manually.</p>
       
-      <div class="form-group">
-        <label data-i18n="rf.bgLabel">Your professional background</label>
-        <textarea id="rfBackground" rows="8" data-i18n-ph="rf.bgPlaceholder" placeholder="Example: I have 5 years of experience in marketing, including social media management, content creation, and campaign analytics. I hold a Bachelor's in Communications and have used tools like Google Analytics, Hootsuite, and HubSpot. I also have experience managing a small team of 3 people."></textarea>
+      <div class="input-method" style="margin-bottom:1rem;">
+        <button class="active" onclick="switchRfSource('saved')">📁 <span data-i18n="rf.pickSaved">My Resumes</span></button>
+        <button onclick="switchRfSource('paste')">📋 <span data-i18n="rf.pasteManual">Paste Manually</span></button>
+      </div>
+
+      <!-- Saved resumes picker -->
+      <div id="rfSource-saved">
+        <div id="rfResumesList" style="margin-bottom:1rem;">
+          <p style="color:var(--text2);font-size:0.9rem;">Loading your resumes...</p>
+        </div>
+      </div>
+
+      <!-- Manual paste -->
+      <div id="rfSource-paste" class="hidden">
+        <div class="form-group">
+          <label data-i18n="rf.bgLabel">Your professional background</label>
+          <textarea id="rfBackground" rows="8" data-i18n-ph="rf.bgPlaceholder" placeholder="Example: I have 5 years of experience in marketing, including social media management, content creation, and campaign analytics. I hold a Bachelor's in Communications and have used tools like Google Analytics, Hootsuite, and HubSpot. I also have experience managing a small team of 3 people."></textarea>
+        </div>
       </div>
 
       <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
@@ -1005,8 +1020,11 @@ const T = {
     // Role Finder
     'nav.rolefinder': 'Role Finder',
     'rf.title': '🔍 Role Finder', 'rf.subtitle': 'Discover which roles match your background — powered by AI',
-    'rf.inputTitle': '📝 Tell us about your background',
-    'rf.inputDesc': 'Describe your work experience, education, skills, and any certifications. The more detail you provide, the better the match.',
+    'rf.inputTitle': '📝 Your background',
+    'rf.inputDesc': 'Select a resume you\'ve already built, or paste your background manually.',
+    'rf.pickSaved': 'My Resumes', 'rf.pasteManual': 'Paste Manually',
+    'rf.noResumes': 'No resumes yet. Build one first!', 'rf.buildFirst': 'Build a Resume First',
+    'rf.loadError': 'Failed to load resumes. Try pasting instead.',
     'rf.bgLabel': 'Your professional background',
     'rf.bgPlaceholder': 'Example: I have 5 years of experience in marketing, including social media management, content creation, and campaign analytics. I hold a Bachelor\'s in Communications and have used tools like Google Analytics, Hootsuite, and HubSpot. I also have experience managing a small team of 3 people.',
     'rf.analyzeBtn': 'Find My Roles',
@@ -1111,8 +1129,11 @@ const T = {
     // Role Finder
     'nav.rolefinder': 'Trouveur de Rôles',
     'rf.title': '🔍 Trouveur de Rôles', 'rf.subtitle': 'Découvrez quels postes correspondent à votre profil — propulsé par l\'IA',
-    'rf.inputTitle': '📝 Décrivez votre parcours',
-    'rf.inputDesc': 'Décrivez votre expérience professionnelle, formation, compétences et certifications. Plus vous donnez de détails, meilleure sera l\'analyse.',
+    'rf.inputTitle': '📝 Votre parcours',
+    'rf.inputDesc': 'Sélectionnez un CV que vous avez déjà créé, ou collez votre parcours manuellement.',
+    'rf.pickSaved': 'Mes CV', 'rf.pasteManual': 'Coller manuellement',
+    'rf.noResumes': 'Aucun CV encore. Créez-en un d\'abord !', 'rf.buildFirst': 'Créer un CV d\'abord',
+    'rf.loadError': 'Échec du chargement. Essayez de coller à la place.',
     'rf.bgLabel': 'Votre parcours professionnel',
     'rf.bgPlaceholder': 'Exemple : J\'ai 5 ans d\'expérience en marketing, incluant la gestion des réseaux sociaux, la création de contenu et l\'analyse de campagnes. Je détiens un baccalauréat en communications et j\'ai utilisé Google Analytics, Hootsuite et HubSpot. J\'ai aussi géré une petite équipe de 3 personnes.',
     'rf.analyzeBtn': 'Trouver mes rôles',
@@ -1382,7 +1403,7 @@ function showPage(page) {
   // Load latest resume when visiting resume page
   if (page === 'resume') loadLatestResume();
   // Update tier note when visiting role finder
-  if (page === 'rolefinder') updateRfTierNote();
+  if (page === 'rolefinder') { updateRfTierNote(); loadRfResumes(); }
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -2659,6 +2680,8 @@ function resetInterview() {
 
 // ===================== ROLE FINDER =====================
 
+let rfSelectedResumeId = null;
+
 function updateRfTierNote() {
   const plan = currentUser?.plan || 'none';
   const el = document.getElementById('rfTierNote');
@@ -2668,11 +2691,88 @@ function updateRfTierNote() {
   else el.textContent = '🆓 ' + t('rf.tierFree');
 }
 
+function switchRfSource(source) {
+  const btns = document.querySelector('#rfInput .input-method').querySelectorAll('button');
+  btns.forEach((b,i) => b.classList.toggle('active', (source==='saved'&&i===0)||(source==='paste'&&i===1)));
+  document.getElementById('rfSource-saved').classList.toggle('hidden', source!=='saved');
+  document.getElementById('rfSource-paste').classList.toggle('hidden', source!=='paste');
+}
+
+async function loadRfResumes() {
+  const container = document.getElementById('rfResumesList');
+  container.innerHTML = '<p style="color:var(--text2);font-size:0.9rem;">Loading your resumes...</p>';
+  try {
+    const r = await fetch(API+'/api/documents/list', { headers:headers() });
+    const d = await r.json();
+    if (!r.ok) throw new Error();
+
+    const resumes = d.resumes || [];
+    window._rfResumesData = resumes;
+
+    if (resumes.length === 0) {
+      container.innerHTML = `<div style="text-align:center;padding:2rem;background:var(--bg);border-radius:12px;border:1px dashed var(--border);">
+        <p style="color:var(--text2);margin-bottom:1rem;" data-i18n="rf.noResumes">${t('rf.noResumes')}</p>
+        <button class="btn btn-outline btn-sm" onclick="showPage('resume')">📄 ${t('rf.buildFirst')}</button>
+      </div>`;
+      return;
+    }
+
+    // Auto-select the first (most recent) resume
+    rfSelectedResumeId = resumes[0].id;
+
+    container.innerHTML = resumes.map(res => {
+      const date = new Date(res.created_at).toLocaleDateString(currentLang === 'fr' ? 'fr-CA' : 'en-US', { month:'short', day:'numeric' });
+      const isOptimized = res.title?.toLowerCase().includes('optimized');
+      const badge = isOptimized
+        ? '<span class="tier-badge tier-pro" style="position:static;font-size:0.6rem;">OPTIMIZED</span>'
+        : '<span class="tier-badge tier-free" style="position:static;font-size:0.6rem;">GENERIC</span>';
+      const isSelected = rfSelectedResumeId === res.id;
+      return `<div class="rf-resume-pick" data-id="${res.id}" onclick="selectRfResume(${res.id})" style="padding:1rem;background:${isSelected?'rgba(56,189,248,0.1)':'var(--bg)'};border:1px solid ${isSelected?'var(--accent)':'var(--border)'};border-radius:10px;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span style="font-size:1.3rem;">${isOptimized?'🎯':'📄'}</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;">${res.title||'Resume'} ${badge}</div>
+            <div style="color:var(--text2);font-size:0.8rem;">${res.full_name||''} · ${date}</div>
+          </div>
+        </div>
+        <div class="rf-pick-check" style="width:22px;height:22px;border-radius:50%;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--accent);">${isSelected?'✓':''}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('Load RF resumes error:', e);
+    container.innerHTML = `<p style="color:var(--danger);font-size:0.9rem;">${t('rf.loadError')}</p>`;
+  }
+}
+
+function selectRfResume(id) {
+  rfSelectedResumeId = id;
+  document.querySelectorAll('.rf-resume-pick').forEach(card => {
+    const isThis = card.dataset.id === String(id);
+    card.style.background = isThis ? 'rgba(56,189,248,0.1)' : 'var(--bg)';
+    card.style.borderColor = isThis ? 'var(--accent)' : '';
+    card.querySelector('.rf-pick-check').innerHTML = isThis ? '✓' : '';
+    card.querySelector('.rf-pick-check').style.borderColor = isThis ? 'var(--accent)' : 'var(--border)';
+  });
+}
+
 async function analyzeRoles() {
-  const bg = document.getElementById('rfBackground').value.trim();
-  if (bg.length < 30) {
-    alert(currentLang === 'fr' ? 'Veuillez fournir au moins quelques phrases décrivant votre parcours.' : 'Please provide at least a few sentences about your background.');
-    return;
+  // Determine source: saved resume or manual paste
+  const usingSaved = !document.getElementById('rfSource-saved').classList.contains('hidden');
+  let body = { language: currentLang };
+
+  if (usingSaved) {
+    if (!rfSelectedResumeId) {
+      alert(currentLang === 'fr' ? 'Veuillez sélectionner un CV.' : 'Please select a resume.');
+      return;
+    }
+    body.resume_id = rfSelectedResumeId;
+  } else {
+    const bg = document.getElementById('rfBackground').value.trim();
+    if (bg.length < 30) {
+      alert(currentLang === 'fr' ? 'Veuillez fournir au moins quelques phrases décrivant votre parcours.' : 'Please provide at least a few sentences about your background.');
+      return;
+    }
+    body.background = bg;
   }
 
   const btn = document.getElementById('rfAnalyzeBtn');
@@ -2683,7 +2783,7 @@ async function analyzeRoles() {
     const r = await fetch(API + '/api/role-finder/analyze', {
       method: 'POST',
       headers: headers(),
-      body: JSON.stringify({ background: bg, language: currentLang })
+      body: JSON.stringify(body)
     });
     const d = await r.json();
     hideLoading();
@@ -2810,6 +2910,10 @@ function resetRoleFinder() {
   document.getElementById('rfGrowthCard').classList.add('hidden');
   document.getElementById('rfHigherCard').classList.add('hidden');
   document.getElementById('rfRolesList').innerHTML = '';
+  document.getElementById('rfBackground').value = '';
+  rfSelectedResumeId = null;
+  switchRfSource('saved');
+  loadRfResumes();
 }
 
 function escHtml(str) {
