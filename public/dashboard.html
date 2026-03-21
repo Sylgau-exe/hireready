@@ -440,9 +440,10 @@ textarea{min-height:120px;}
         <div id="rfHigherList"></div>
       </div>
 
-      <!-- Try Again -->
-      <div style="text-align:center;margin-top:1rem;">
+      <!-- Bottom Actions -->
+      <div style="text-align:center;margin-top:1.5rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="resetRoleFinder()">🔄 <span data-i18n="rf.tryAgain">Analyze Again</span></button>
+        <button class="btn btn-primary" onclick="showPage('tailor')">🎯 <span data-i18n="rf.nextStep">Next: Tailor Your Resume to a Job</span></button>
       </div>
     </div>
   </div>
@@ -1139,6 +1140,17 @@ const T = {
     'rf.higherRoles': 'Aspirational Roles',
     'rf.higherDesc': 'With targeted improvements, you could qualify for these higher-level positions:',
     'rf.tryAgain': 'Analyze Again',
+    'rf.nextStep': 'Next: Tailor Your Resume to a Job',
+    'rf.roleComparisons': 'Role Comparisons',
+    'rf.extendedInsights': 'Strategic Insights',
+    'rf.insightDirection': 'Which direction should you move in?',
+    'rf.insightTargetNow': 'Which roles are best to target now?',
+    'rf.insightNotYet': 'Which roles are not yet attainable?',
+    'rf.insightBlocking': 'Which skills are preventing growth to a higher level?',
+    'rf.compResponsibilities': 'Differences in responsibilities',
+    'rf.compLevel': 'Differences in level',
+    'rf.compRequirements': 'Differences in requirements',
+    'rf.compTransition': 'What is needed to move up',
     'rf.tierFree': 'Free: 1 matching role',
     'rf.tierPro': 'Pro: 3-5 roles with detailed analysis',
     'rf.tierPremium': 'Premium: Full career growth plan',
@@ -1254,6 +1266,17 @@ const T = {
     'rf.higherRoles': 'Rôles aspirationnels',
     'rf.higherDesc': 'Avec des améliorations ciblées, vous pourriez accéder à ces postes de niveau supérieur :',
     'rf.tryAgain': 'Analyser à nouveau',
+    'rf.nextStep': 'Suivant : Adapter votre CV à un poste',
+    'rf.roleComparisons': 'Comparaison des rôles',
+    'rf.extendedInsights': 'Perspectives stratégiques',
+    'rf.insightDirection': 'Dans quelle direction devriez-vous aller ?',
+    'rf.insightTargetNow': 'Quels rôles cibler maintenant ?',
+    'rf.insightNotYet': 'Quels rôles ne sont pas encore atteignables ?',
+    'rf.insightBlocking': 'Quelles compétences freinent votre progression ?',
+    'rf.compResponsibilities': 'Différences de responsabilités',
+    'rf.compLevel': 'Différences de niveau',
+    'rf.compRequirements': 'Différences d\'exigences',
+    'rf.compTransition': 'Ce qu\'il faut pour monter',
     'rf.tierFree': 'Gratuit : 1 rôle correspondant',
     'rf.tierPro': 'Pro : 3-5 rôles avec analyse détaillée',
     'rf.tierPremium': 'Premium : Plan complet de croissance',
@@ -3177,19 +3200,19 @@ function renderRoleResults(data) {
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
             <div style="padding:0.75rem;background:rgba(56,189,248,0.05);border-radius:8px;">
-              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--accent);margin-bottom:0.35rem;">Responsibilities</div>
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--accent);margin-bottom:0.35rem;">${t('rf.compResponsibilities')}</div>
               <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.responsibility_diff)}</div>
             </div>
             <div style="padding:0.75rem;background:rgba(129,140,248,0.05);border-radius:8px;">
-              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--accent2);margin-bottom:0.35rem;">Level</div>
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--accent2);margin-bottom:0.35rem;">${t('rf.compLevel')}</div>
               <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.level_diff)}</div>
             </div>
             <div style="padding:0.75rem;background:rgba(251,191,36,0.05);border-radius:8px;">
-              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--warn);margin-bottom:0.35rem;">Requirements</div>
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--warn);margin-bottom:0.35rem;">${t('rf.compRequirements')}</div>
               <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.requirements_diff)}</div>
             </div>
             <div style="padding:0.75rem;background:rgba(52,211,153,0.05);border-radius:8px;">
-              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--success);margin-bottom:0.35rem;">How to move up</div>
+              <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;color:var(--success);margin-bottom:0.35rem;">${t('rf.compTransition')}</div>
               <div style="color:var(--text2);font-size:0.85rem;line-height:1.5;">${escHtml(comp.transition_path)}</div>
             </div>
           </div>
@@ -3206,29 +3229,29 @@ function renderRoleResults(data) {
     let insHtml = '';
 
     if (data.career_direction) {
-      insHtml += `<div style="padding:1rem;background:rgba(56,189,248,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--accent);border-radius:0;">
-        <div style="font-weight:600;margin-bottom:0.35rem;">🧭 Career direction</div>
+      insHtml += `<div style="padding:1rem;background:rgba(56,189,248,0.06);border-left:3px solid var(--accent);border-radius:0;margin-bottom:0.75rem;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">${t('rf.insightDirection')}</div>
         <div style="color:var(--text2);font-size:0.9rem;line-height:1.6;">${escHtml(data.career_direction)}</div>
       </div>`;
     }
 
     if (data.target_now?.length) {
-      insHtml += `<div style="padding:1rem;background:rgba(52,211,153,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--success);border-radius:0;">
-        <div style="font-weight:600;margin-bottom:0.35rem;">✅ Target now</div>
+      insHtml += `<div style="padding:1rem;background:rgba(52,211,153,0.06);border-left:3px solid var(--success);border-radius:0;margin-bottom:0.75rem;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">${t('rf.insightTargetNow')}</div>
         <div style="color:var(--text2);font-size:0.9rem;">${data.target_now.map(r => `<span class="tag tag-green" style="margin:0.15rem;">${escHtml(r)}</span>`).join('')}</div>
       </div>`;
     }
 
     if (data.not_yet_attainable?.length) {
-      insHtml += `<div style="padding:1rem;background:rgba(248,113,113,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--danger);border-radius:0;">
-        <div style="font-weight:600;margin-bottom:0.35rem;">⛔ Not yet attainable</div>
+      insHtml += `<div style="padding:1rem;background:rgba(248,113,113,0.06);border-left:3px solid var(--danger);border-radius:0;margin-bottom:0.75rem;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">${t('rf.insightNotYet')}</div>
         ${data.not_yet_attainable.map(r => `<div style="margin-bottom:0.35rem;"><span class="tag tag-red">${escHtml(r.title || r)}</span>${r.reason ? `<span style="color:var(--text2);font-size:0.85rem;margin-left:0.5rem;">— ${escHtml(r.reason)}</span>` : ''}</div>`).join('')}
       </div>`;
     }
 
     if (data.blocking_skills?.length) {
-      insHtml += `<div style="padding:1rem;background:rgba(251,191,36,0.06);border-radius:10px;margin-bottom:0.75rem;border-left:3px solid var(--warn);border-radius:0;">
-        <div style="font-weight:600;margin-bottom:0.35rem;">🚧 Blocking your growth</div>
+      insHtml += `<div style="padding:1rem;background:rgba(251,191,36,0.06);border-left:3px solid var(--warn);border-radius:0;margin-bottom:0.75rem;">
+        <div style="font-weight:600;margin-bottom:0.35rem;">${t('rf.insightBlocking')}</div>
         <div style="color:var(--text2);font-size:0.9rem;">${data.blocking_skills.map(s => `<span class="tag" style="background:rgba(251,191,36,0.12);color:var(--warn);margin:0.15rem;">${escHtml(s)}</span>`).join('')}</div>
       </div>`;
     }
