@@ -247,7 +247,8 @@ Respond with ONLY valid JSON. No markdown backticks, no preamble, no explanation
     });
 
     if (!aiResponse.ok) {
-      console.error('Anthropic API error:', aiResponse.status);
+      const errBody = await aiResponse.text().catch(() => 'no body');
+      console.error('Anthropic API error:', aiResponse.status, errBody.substring(0, 300));
       return res.status(502).json({ error: 'AI analysis failed. Please try again.' });
     }
 
