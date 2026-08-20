@@ -236,7 +236,7 @@ Respond with ONLY valid JSON. No markdown backticks, no preamble, no explanation
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: tier === 'premium' ? 4000 : 2000,
         messages: [{
           role: 'user',
