@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 2500,
           messages: [{ role: 'user', content: `Translate to ${lang}. Keep proper nouns (names, companies, cities, schools) unchanged. Output ONLY the translated text, nothing else:\n\n${input}` }]
         })
@@ -212,7 +212,7 @@ Follow resume standards for ${targetCountry || 'Canada'}. Use relevant keywords 
     }
 
     const apiBody = {
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }]
     };
